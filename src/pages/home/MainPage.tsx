@@ -181,7 +181,6 @@ const MainPage = () => {
                 to={
                   "https://garrulous-bearskin-817.notion.site/ONETOOL-e7a9e586415142ab9a2f49d3b4f0146d?pvs=4"
                 }
-                target="_blank"
               >
                 <Banner2>
                   <img src="/banner2.png" />
