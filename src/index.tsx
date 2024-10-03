@@ -2,6 +2,8 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import router from "./Route";
 import { createGlobalStyle } from "styled-components";
+import { HelmetProvider } from "react-helmet-async";
+import MetaTag from "./components/MetaTag";
 
 const GlobalStyle = createGlobalStyle`
 @font-face {
@@ -85,7 +87,10 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <>
-    <GlobalStyle />
-    <RouterProvider router={router} />
+    <HelmetProvider>
+      <GlobalStyle />
+      <MetaTag />
+      <RouterProvider router={router} />
+    </HelmetProvider>
   </>
 );
