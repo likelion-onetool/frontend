@@ -309,7 +309,6 @@ const DetailedItem = () => {
                   to={
                     "https://docs.google.com/forms/d/e/1FAIpQLSdRLzlCtOT-Gce34D3BDqxG6JzKj0bQXSQizRFMpuTJ9x82EQ/viewform"
                   }
-                  target="_blank"
                 >
                   구매문의 하기
                 </BuyButton>
