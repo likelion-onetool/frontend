@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { RiKakaoTalkLine } from "react-icons/ri";
 import { FaInstagram } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const FooterContainer = styled.footer`
   background-color: #f0f0f2;
@@ -36,7 +37,7 @@ const ButtonContainer = styled.div`
   }
 `;
 
-const Button = styled.a`
+const Button = styled(Link)`
   font-weight: 400;
   font-size: 13.23px;
   line-height: 14px;
@@ -101,11 +102,11 @@ const Footer = () => {
     <FooterContainer>
       <TopContainer>
         <ButtonContainer>
-          <Button href="#!">이용약관</Button>|
-          <Button href="#!">개인정보처리방침</Button>|
-          <Button href="#!">EULA</Button>|<Button href="#!">파트너 신청</Button>
-          |<Button href="#!">고객센터</Button>|
-          <Button href="#!">공지사항</Button>
+          <Button to={""}>이용약관</Button>|
+          <Button to={""}>개인정보처리방침</Button>|
+          <Button to={""}>EULA</Button>|<Button to={""}>파트너 신청</Button>|
+          <Button to={"/faq"}>고객센터</Button>|
+          <Button to={"/faq"}>공지사항</Button>
         </ButtonContainer>
         <RightIcons>
           <IconContainer>
