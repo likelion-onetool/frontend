@@ -31,6 +31,7 @@ export default function MetaTag(props: MetaTagProps) {
         content={props.description || "default description"}
       />
       <meta property="og:url" content={url} />
+      <link rel="icon" type="image/png" href="favicon.ico" sizes="16x16" />
     </Helmet>
   );
 }
