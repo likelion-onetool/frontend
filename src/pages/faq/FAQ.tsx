@@ -5,7 +5,6 @@ export const Title = styled.h2`
   font-size: 24px;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 20px;
 `;
 
 const SearchContainer = styled.div`
@@ -41,12 +40,18 @@ const SearchButton = styled.button`
 export const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+  margin-top: 38px;
+  p {
+    font-weight: 400;
+    line-height: 25.2px;
+    font-size: 18px;
+    color: #121212;
+  }
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 15px;
 
   th,
   td {
@@ -80,7 +85,6 @@ const PaginationWrapper = styled.div`
   justify-content: center;
   align-items: center;
   margin-top: 50px;
-  margin-bottom: 100px;
 `;
 
 const PaginationButton = styled.button`
@@ -103,6 +107,7 @@ const WriteButton = styled(Link)`
   align-self: flex-end;
   width: 80px;
   height: 30px;
+  margin-top: 15px;
   border: 1px solid lightgrey;
   background-color: #2645ac;
   border-radius: 5px;
@@ -116,8 +121,18 @@ const WriteButton = styled(Link)`
   transition: background-color 0.3s ease;
 `;
 
+// 테이블 내의 Link를 블록 요소로 만들어 줌
+const TableRowLink = styled(Link)`
+  display: block;
+`;
+
+const TableRow = styled.tr`
+  &:hover {
+    background-color: #f9f9f9;
+  }
+`;
+
 const FAQ = () => {
-  // 테스트 데이터 (API에서 가져올 내용)
   const faqItems = [
     {
       id: 1,
@@ -170,7 +185,6 @@ const FAQ = () => {
       <Title>문의사항</Title>
       <SearchContainer>
         <SearchInput type="text" />
-
         <SearchButton>
           <svg
             width="16"
@@ -200,7 +214,7 @@ const FAQ = () => {
         </thead>
         <tbody>
           {faqItems.map((item, index) => (
-            <tr
+            <TableRow
               key={item.id}
               style={item.isNotice ? { backgroundColor: "#F4F4F4" } : {}}
             >
@@ -214,15 +228,21 @@ const FAQ = () => {
                 {item.isNotice ? "공지" : index + 1}
               </td>
               <td>{item.category}</td>
+
               <td>
-                {item.isNotice ? <Notice>{item.title}</Notice> : item.title}
+                <TableRowLink to={`/faq/${item.id}`}>
+                  {item.isNotice ? <Notice>{item.title}</Notice> : item.title}
+                </TableRowLink>
               </td>
+
               <td style={{ fontWeight: 400, color: "#6B6B6B" }}>{item.date}</td>
-            </tr>
+            </TableRow>
           ))}
         </tbody>
       </Table>
+
       <WriteButton to="/faq/write">글쓰기</WriteButton>
+
       <PaginationWrapper>
         <svg
           width="6"

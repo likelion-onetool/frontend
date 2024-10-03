@@ -14,7 +14,11 @@ const MainContent = styled.div`
   flex-direction: column;
   justify-content: center;
   flex: 1;
-  padding: 50px 300px;
+  padding: 50px 250px 100px 250px;
+
+  @media (min-width: 1920px) and (min-height: 1080px) {
+    padding: 50px 570px 100px 570px; /* 1920x1080 해상도일 때 패딩 값 변경 */
+  }
 `;
 
 const CenterLayout = () => {
