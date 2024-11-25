@@ -1,8 +1,17 @@
 import styled from "styled-components";
-import TopNavBar from "../../components/TopNavBar";
-import LeftSidebar from "../../components/LeftSidebar";
+import { useState } from "react";
 import ItemCard from "../../components/ItemCard";
+import LeftSidebar from "../../components/LeftSidebar";
+import TopNavBar from "../../components/TopNavBar";
 import Footer from "../../components/Footer";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getAllItems,
+  getCategoryItems,
+  getItems,
+  ItemProps,
+} from "../../utils/api";
 
 const MainContainer = styled.div`
   display: flex;
@@ -16,27 +25,22 @@ const ContentContainer = styled.div`
 `;
 
 const RightContainer = styled.div`
-  width: 80%;
-  margin-left: 40px;
+  width: 100%;
+  padding: 0 40px;
 `;
 
 const TextContainer = styled.div`
-  width: 100%;
-  height: 60px;
-  padding: 0px 5px 0px 0px;
   font-weight: 700;
   font-size: 24px;
   line-height: 36px;
   color: #333333;
-  margin-left: 15px;
-  margin-top: 15px;
+  margin-left: 30px;
+  margin-top: 30px;
+  margin-bottom: 30px;
 `;
 
 const FilterContainer = styled.div`
-  width: 80%;
-  height: 30px;
-  margin-left: 15px;
-  padding: 0px 5px 0px 0px;
+  margin-left: 30px;
   display: flex;
   gap: 0.5rem;
 `;
@@ -56,81 +60,133 @@ const FilterButton = styled.button`
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #007bff;
-    color: #fff;
+    background-color: #5ce65c;
   }
-`;
-
-const ItemsCount = styled.div`
-  width: 80%;
-  height: 20px;
-  padding: 0px 5px 0px 0px;
-  margin-left: 15px;
-  margin-top: 20px;
-  margin-bottom: 15px;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 24px;
-  color: #212b3680;
 `;
 
 const ItemsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
-  width: 80%;
-  margin-top: 0px;
-  margin-left: 13px;
+  margin-top: 30px;
+  margin-left: 30px;
 `;
 
-const items = [
-  { id: 1, name: "Item 1", image: "https://via.placeholder.com/150" },
-  { id: 2, name: "Item 2", image: "https://via.placeholder.com/150" },
-  { id: 3, name: "Item 3", image: "https://via.placeholder.com/150" },
-  { id: 4, name: "Item 4", image: "https://via.placeholder.com/150" },
-  { id: 5, name: "Item 5", image: "https://via.placeholder.com/150" },
-  { id: 6, name: "Item 6", image: "https://via.placeholder.com/150" },
-  { id: 7, name: "Item 7", image: "https://via.placeholder.com/150" },
-  { id: 8, name: "Item 8", image: "https://via.placeholder.com/150" },
-  { id: 9, name: "Item 9", image: "https://via.placeholder.com/150" },
-  { id: 10, name: "Item 10", image: "https://via.placeholder.com/150" },
-  { id: 11, name: "Item 11", image: "https://via.placeholder.com/150" },
-  { id: 12, name: "Item 12", image: "https://via.placeholder.com/150" },
-  { id: 13, name: "Item 13", image: "https://via.placeholder.com/150" },
-  { id: 14, name: "Item 14", image: "https://via.placeholder.com/150" },
-  { id: 15, name: "Item 15", image: "https://via.placeholder.com/150" },
-  { id: 16, name: "Item 16", image: "https://via.placeholder.com/150" },
-];
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  gap: 8px;
+`;
 
-const ListedItems = () => {
-  const itemCount = items.length;
+const PaginationButton = styled.button<{ disabled?: boolean }>`
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: ${(props) => (props.disabled ? "#f0f0f0" : "#fff")};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+
+  &:hover {
+    background-color: ${(props) => (props.disabled ? "#f0f0f0" : "#00AC17")};
+    color: ${(props) => (props.disabled ? "#333" : "#fff")};
+  }
+`;
+
+const AllItemsPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const category = new URLSearchParams(location.search).get("category");
+  const search = new URLSearchParams(location.search).get("s");
+  const pageParam = new URLSearchParams(location.search).get("page") || "0";
+  const [page, setPage] = useState(parseInt(pageParam, 10));
+
+  const { data, isLoading, error } = useQuery<ItemProps>({
+    queryKey: search
+      ? ["items", "search", search, page]
+      : category
+      ? ["items", "category", category, page]
+      : ["items", "all", page],
+    queryFn: () => {
+      if (search) return getItems({ search, page });
+      if (category) return getCategoryItems({ category, page });
+      return getAllItems(page, 8);
+    },
+  });
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    navigate({
+      search: `?${category ? `category=${category}&` : ""}${
+        search ? `s=${search}&` : ""
+      }page=${newPage}`,
+    });
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+
+  const pageTitle = search
+    ? `검색 결과: ${search}`
+    : category
+    ? `${category} 요리/반찬 목록`
+    : "전체 상품 목록";
 
   return (
     <>
-      <TopNavBar />
-      <MainContainer>
-        <ContentContainer>
-          <LeftSidebar />
-          <RightContainer>
-            <TextContainer>카테고리 이름</TextContainer>
-            <FilterContainer>
-              <FilterButton>확장자 ▾</FilterButton>
-              <FilterButton>가격순 ▾</FilterButton>
-              <FilterButton>판매순 ▾</FilterButton>
-              <FilterButton>날짜순 ▾</FilterButton>
-            </FilterContainer>
-            <ItemsCount>총 {itemCount}개</ItemsCount>
-            <ItemsGrid>
-              {items.map((item) => (
-                <ItemCard key={item.id} item={item} />
-              ))}
-            </ItemsGrid>
-          </RightContainer>
-        </ContentContainer>
-        <Footer />
-      </MainContainer>
+      {!data ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          <TopNavBar />
+          <MainContainer>
+            <ContentContainer>
+              <LeftSidebar />
+              <RightContainer>
+                <TextContainer>{pageTitle}</TextContainer>
+                <FilterContainer>
+                  <FilterButton>가격순 ▾</FilterButton>
+                  <FilterButton>판매순 ▾</FilterButton>
+                  <FilterButton>후기순 ▾</FilterButton>
+                </FilterContainer>
+                <ItemsGrid>
+                  {data.result.content.map((item) => (
+                    <ItemCard
+                      key={item.blueprint.id}
+                      blueprint={item.blueprint}
+                    />
+                  ))}
+                </ItemsGrid>
+                <PaginationContainer>
+                  <PaginationButton
+                    onClick={() => handlePageChange(page - 1)}
+                    disabled={page === 0}
+                  >
+                    이전
+                  </PaginationButton>
+                  {[...Array(data.result.totalPages)].map((_, index) => (
+                    <PaginationButton
+                      key={index}
+                      onClick={() => handlePageChange(index)}
+                      disabled={index === page}
+                    >
+                      {index + 1}
+                    </PaginationButton>
+                  ))}
+                  <PaginationButton
+                    onClick={() => handlePageChange(page + 1)}
+                    disabled={page + 1 >= (data?.result.totalPages || 1)}
+                  >
+                    다음
+                  </PaginationButton>
+                </PaginationContainer>
+              </RightContainer>
+            </ContentContainer>
+            <Footer />
+          </MainContainer>
+        </>
+      )}
     </>
   );
 };
 
-export default ListedItems;
+export default AllItemsPage;

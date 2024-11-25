@@ -4,6 +4,8 @@ import router from "./Route";
 import { createGlobalStyle } from "styled-components";
 import { HelmetProvider } from "react-helmet-async";
 import MetaTag from "./components/MetaTag";
+import axios from "axios";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const GlobalStyle = createGlobalStyle`
 @font-face {
@@ -82,15 +84,29 @@ input{
 }
 `;
 
+axios.defaults.baseURL = "https://test.onetool.co.kr";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
+      staleTime: 1 * 60 * 1000,
+    },
+  },
+});
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
   <>
-    <HelmetProvider>
-      <GlobalStyle />
-      <MetaTag />
-      <RouterProvider router={router} />
-    </HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <GlobalStyle />
+        <MetaTag />
+        <RouterProvider router={router} />
+      </HelmetProvider>
+    </QueryClientProvider>
   </>
 );

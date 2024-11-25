@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { IoIosArrowDown } from "react-icons/io";
 import { IoIosArrowUp } from "react-icons/io";
@@ -32,21 +32,21 @@ const CategoryContainer = styled.div`
   padding: 0px 0px 30px 0px;
 `;
 
-const MainCategoryContainer = styled.div`
-  padding: 0px;
-`;
+const MainCategoryContainer = styled.div``;
 
 const SubCategoryContainer = styled.div`
   padding: 0px;
 `;
 
-const Category = styled.div<CategoryProps>`
+const Category = styled(Link)`
   border-radius: 4px;
   padding: 8px 0px;
   font-weight: 600;
   font-size: 13.23px;
   line-height: 21px;
   letter-spacing: 0.15px;
+  display: block;
+  width: 100%;
 
   cursor: pointer;
 
@@ -76,12 +76,6 @@ const LeftSidebar = () => {
   const navigate = useNavigate();
   const [categoryToggle, setCategoryToggle] = useState<boolean>(true);
 
-  const handleCategoryClick = (index: number) => {
-    if (index === 0) {
-      navigate("/items");
-    }
-  };
-
   const handleSubCategoryClick = () => {};
 
   return (
@@ -95,15 +89,11 @@ const LeftSidebar = () => {
         </CategoryHeader>
         <CategoryContainer>
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(0)}>
-              전체
-            </Category>
+            <Category to={"/items"}>전체</Category>
           </MainCategoryContainer>
 
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(1)}>
-              건축도면
-            </Category>
+            <Category to={"/items"}>건축도면</Category>
             <SubCategoryContainer>
               <SubCategory onClick={handleSubCategoryClick}>- 주거</SubCategory>
               <SubCategory onClick={handleSubCategoryClick}>- 상업</SubCategory>
@@ -112,9 +102,7 @@ const LeftSidebar = () => {
           </MainCategoryContainer>
 
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(2)}>
-              토목도면
-            </Category>
+            <Category to={"/items"}>토목도면</Category>
             <SubCategoryContainer>
               <SubCategory onClick={handleSubCategoryClick}>- 도로</SubCategory>
               <SubCategory onClick={handleSubCategoryClick}>- 교통</SubCategory>
@@ -126,9 +114,7 @@ const LeftSidebar = () => {
           </MainCategoryContainer>
 
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(3)}>
-              인테리어 도면
-            </Category>
+            <Category to={"/items"}>인테리어 도면</Category>
             <SubCategoryContainer>
               <SubCategory onClick={handleSubCategoryClick}>- 주거</SubCategory>
               <SubCategory onClick={handleSubCategoryClick}>- 상업</SubCategory>
@@ -139,9 +125,7 @@ const LeftSidebar = () => {
           </MainCategoryContainer>
 
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(4)}>
-              기계 도면
-            </Category>
+            <Category to={"/items"}>기계 도면</Category>
             <SubCategoryContainer>
               <SubCategory onClick={handleSubCategoryClick}>
                 - 기계부품
@@ -151,18 +135,14 @@ const LeftSidebar = () => {
           </MainCategoryContainer>
 
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(5)}>
-              전기 도면
-            </Category>
+            <Category to={"/items"}>전기 도면</Category>
             <SubCategoryContainer>
               <SubCategory onClick={handleSubCategoryClick}>- 전기</SubCategory>
             </SubCategoryContainer>
           </MainCategoryContainer>
 
           <MainCategoryContainer>
-            <Category active={false} onClick={() => handleCategoryClick(6)}>
-              기타 도면
-            </Category>
+            <Category to={"/items"}>기타 도면</Category>
           </MainCategoryContainer>
         </CategoryContainer>
       </HorizontalBorder>

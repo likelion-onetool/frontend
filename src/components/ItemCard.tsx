@@ -1,80 +1,126 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { BlueprintProps } from "../utils/api";
+import { formatPrice } from "../utils/formatPrice";
 
-const ItemCardContainer = styled.div`
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 292px;
-  height: 340px;
+const ItemCardContainer = styled(motion.div)`
+  width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* 그림자가 카드 안으로 들어가지 않게 설정 */
+  border-radius: 6.65px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 기본 그림자 */
+  transition: box-shadow 0.3s ease; /* 그림자 전환 */
+
+  &:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 */
+  }
 `;
 
-const ItemImage = styled.img`
-  width: 290px;
+const ItemImage = styled(motion.img)`
+  width: 100%;
   height: 200px;
   border-radius: 6.65px;
-  border: 1px solid #EEEEEE;
+  border: 1px solid #eeeeee;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.3s ease; /* 이미지 변환 전환 */
+
+  &:hover {
+    transform: scale(1.05); /* 이미지 확대 */
+  }
 `;
 
 const BelowContainer = styled.div`
-  padding: 12px 6px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background-color: #fff; /* 카드 배경색 */
 `;
 
-const BrandName = styled.h3`
-  font-weight: 400;
-  font-size: 11.25px;
-  line-height: 12px;
-  color: #A0A0A0;
+const BrandName = styled.h4`
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 16px;
+  color: #a0a0a0;
+  margin: 0;
 `;
 
 const ItemName = styled.h3`
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 21px;
-  color: #1A1A1A;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 22px;
+  color: #1a1a1a;
+  margin: 0;
+  text-transform: capitalize;
 `;
 
 const PriceName = styled.h3`
-  font-weight: 500;
-  font-size: 15.38px;
-  line-height: 16px;
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 22px;
   color: #000000;
+  margin: 0;
 `;
 
-const TagBox = styled.h3`
+const TagBox = styled.div`
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #666;
   margin: 0.5rem 0;
 `;
 
-
-interface IItem {
-  id: number;
-  name: string;
-  image: string;
-}
+const PlaceholderContainer = styled.div`
+  width: 100%;
+  height: 200px; /* 대체 이미지 높이와 일치 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a0a0a0;
+  font-size: 16px;
+  text-align: center;
+  background: #f0f0f0; /* 대체 이미지 배경색 */
+  border-radius: 6.65px;
+`;
 
 interface ItemCardProps {
-  item: IItem;
+  key: number;
+  blueprint: BlueprintProps;
 }
 
-const ItemCard = ({ item }: ItemCardProps) => {
+export default function ItemCard({ blueprint }: ItemCardProps) {
+  const [imgError, setImgError] = useState(false);
+
   return (
-    <ItemCardContainer>
-      <Link to={`/items/${item.id}`}>
-        <ItemImage src={item.image} alt={item.name} />
+    <ItemCardContainer
+      initial={{ scale: 1 }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Link to={`/items/detail/${blueprint.id}`}>
+        <ItemImage
+          src={
+            imgError
+              ? "https://via.placeholder.com/300x200?text=Image+Not+Available"
+              : blueprint.blueprintImg
+          }
+          onError={() => setImgError(true)}
+        />
+
         <BelowContainer>
-          <BrandName>작가명</BrandName>
-          <ItemName>{item.name}</ItemName>
-          <PriceName>가격</PriceName>
+          <BrandName>{blueprint.creatorName}</BrandName>
+          <ItemName>{blueprint.blueprintName}</ItemName>
+          <PriceName>{formatPrice(blueprint.standardPrice)} 원</PriceName>
           <TagBox></TagBox>
         </BelowContainer>
       </Link>
     </ItemCardContainer>
   );
-};
-
-export default ItemCard;
+}
