@@ -94,7 +94,7 @@ interface IGetCategoryItems {
   page: number;
 }
 
-//카테고리별 음식 조회
+//카테고리별 도면 조회
 export async function getCategoryItems({ category, page }: IGetCategoryItems) {
   try {
     const res = await axios.get(
@@ -108,7 +108,7 @@ export async function getCategoryItems({ category, page }: IGetCategoryItems) {
 
 export async function getDetailItem(id: number) {
   try {
-    const res = await axios.get(`/food/${id}`);
+    const res = await axios.get(`/blueprint/${id}`);
     return res.data;
   } catch (error) {
     console.log(error);

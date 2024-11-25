@@ -1,8 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
 import { FaRegUser } from "react-icons/fa6";
+import { useForm } from "react-hook-form";
 
 const TopNavBarContainer = styled.div`
   display: flex;
@@ -46,7 +47,19 @@ const LogoANDInput = styled.div`
   align-items: center;
 `;
 
-const TopNavBar = () => {
+interface FormProps {
+  search: string;
+}
+
+export default function TopNavBar() {
+  const { handleSubmit, register } = useForm<FormProps>();
+
+  const navigate = useNavigate();
+
+  const handleSearch = ({ search }: FormProps) => {
+    navigate(`/items?s=${search}&page=${0}`);
+  };
+
   return (
     <TopNavBarContainer>
       <div></div>
@@ -55,7 +68,13 @@ const TopNavBar = () => {
         <Link to={"/"}>
           <Logo src="/logowhite.jpeg" alt="Logo" />
         </Link>
-        <SearchBar type="text" placeholder="어떤 도면을 찾고 계신가요?" />
+        <form onSubmit={handleSubmit(handleSearch)}>
+          <SearchBar
+            type="text"
+            placeholder="어떤 도면을 찾고 계신가요?"
+            {...register("search", { required: true })}
+          />
+        </form>
       </LogoANDInput>
       <Icons>
         <Link to="/cart">
@@ -67,6 +86,4 @@ const TopNavBar = () => {
       </Icons>
     </TopNavBarContainer>
   );
-};
-
-export default TopNavBar;
+}
