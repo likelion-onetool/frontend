@@ -76,7 +76,7 @@ const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px 0;
+  margin: 50px 0;
   gap: 8px;
 `;
 
@@ -146,7 +146,6 @@ const AllItemsPage = () => {
                 <FilterContainer>
                   <FilterButton>가격순 ▾</FilterButton>
                   <FilterButton>판매순 ▾</FilterButton>
-                  <FilterButton>후기순 ▾</FilterButton>
                 </FilterContainer>
                 <ItemsGrid>
                   {data.result.content.map((item) => (

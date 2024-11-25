@@ -62,19 +62,24 @@ const ItemName = styled.h3`
 const PriceName = styled.h3`
   font-family: "Roboto", sans-serif;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 22px;
-  color: #000000;
+  color: rgba(225, 41, 57, 1);
   margin: 0;
 `;
 
 const TagBox = styled.div`
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
-  color: #666;
-  margin: 0.5rem 0;
+  display: flex;
+`;
+
+const Tag = styled.div`
+  background-color: rgba(233, 231, 255, 1);
+  color: rgba(162, 162, 164, 1);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 19.6px;
+  border-radius: 5px;
+  padding: 2px;
 `;
 
 const PlaceholderContainer = styled.div`
@@ -118,7 +123,9 @@ export default function ItemCard({ blueprint }: ItemCardProps) {
           <BrandName>{blueprint.creatorName}</BrandName>
           <ItemName>{blueprint.blueprintName}</ItemName>
           <PriceName>{formatPrice(blueprint.standardPrice)} 원</PriceName>
-          <TagBox></TagBox>
+          <TagBox>
+            <Tag>{blueprint.program}</Tag>
+          </TagBox>
         </BelowContainer>
       </Link>
     </ItemCardContainer>
