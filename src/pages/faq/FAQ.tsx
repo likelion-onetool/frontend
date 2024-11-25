@@ -38,16 +38,9 @@ const SearchButton = styled.button`
   justify-content: center;
 `;
 
-export const Wrapper = styled.div`
+const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  margin-top: 38px;
-  p {
-    font-weight: 400;
-    line-height: 25.2px;
-    font-size: 18px;
-    color: #121212;
-  }
 `;
 
 const Table = styled.table`

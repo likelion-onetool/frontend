@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { Wrapper as FAQWrapper } from "./FAQ"; // FAQ에서 export한 Title과 Wrapper를 import합니다.
 import { Link } from "react-router-dom";
 
 const Container = styled.div`
@@ -30,6 +29,18 @@ const Info = styled.div`
   font-weight: 400;
   color: #a2a2a4;
   font-size: 10px;
+`;
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: 38px;
+  p {
+    font-weight: 400;
+    line-height: 25.2px;
+    font-size: 18px;
+    color: #121212;
+  }
 `;
 
 const Table = styled.table`
@@ -86,7 +97,7 @@ const FAQDetail = () => {
           <span>2024.07.24</span>
         </Info>
       </Header>
-      <FAQWrapper>
+      <Wrapper>
         <p>
           원툴 이용방법 관련 공지사항입니다. <br />
           여행은 새로운 경험과 추억을 선사하지만, 올바른 준비가 필수입니다. 이번
@@ -106,7 +117,7 @@ const FAQDetail = () => {
           안전하게 만들어 줍니다. 여행을 떠나기 전 이 목록을 체크하고, 최고의
           여행 경험을 준비하세요!
         </p>
-      </FAQWrapper>
+      </Wrapper>
       <Table>
         <tbody>
           <td>
