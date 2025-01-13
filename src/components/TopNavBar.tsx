@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 import { PiShoppingCartSimpleBold } from "react-icons/pi";
@@ -53,7 +53,6 @@ interface FormProps {
 
 export default function TopNavBar() {
   const { handleSubmit, register } = useForm<FormProps>();
-
   const navigate = useNavigate();
 
   const handleSearch = ({ search }: FormProps) => {
@@ -80,7 +79,7 @@ export default function TopNavBar() {
         <Link to="/cart">
           <PiShoppingCartSimpleBold style={{ width: "22px", height: "22px" }} />
         </Link>
-        <Link to="/users/login">
+        <Link to="/users/profile">
           <FaRegUser style={{ width: "18px", height: "18px" }} />
         </Link>
       </Icons>

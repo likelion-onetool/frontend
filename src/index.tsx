@@ -7,6 +7,8 @@ import MetaTag from "./components/MetaTag";
 import axios from "axios";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
+import App from "./App";
+import { RecoilRoot } from "recoil";
 
 const GlobalStyle = createGlobalStyle`
 @font-face {
@@ -107,7 +109,9 @@ root.render(
       <HelmetProvider>
         <GlobalStyle />
         <MetaTag />
-        <RouterProvider router={router} />
+        <RecoilRoot>
+          <App />
+        </RecoilRoot>
       </HelmetProvider>
     </QueryClientProvider>
   </>

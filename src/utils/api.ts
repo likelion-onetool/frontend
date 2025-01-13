@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 interface IGetItems {
   search: string;
@@ -130,6 +130,42 @@ export async function getCartItems() {
     console.log(error);
   }
 }
+
+// user 관련 api
+
+export async function onSilentRefresh(
+  setAuth: (authState: { isAuthenticated: boolean; token: string }) => void
+) {
+  try {
+    const res = await axios.post("/silent-refresh");
+
+    if (!res.data.isSuccess) {
+      throw new Error("Token refresh failed");
+    }
+    onLoginSuccess(res.data.result, setAuth);
+  } catch (error) {
+    console.error("Error during silent refresh:", error); //에러도 제거해야됨
+    // recoil 상태 변경 필요??(기본값이 false니까 안해도 될지도..)
+
+    alert("로그인 갱신 실패. 다시 로그인해주세요."); // alert 제거해야됨
+  }
+}
+
+const JWT_EXPIRY_TIME = 24 * 3600 * 1000;
+
+export const onLoginSuccess = (
+  token: string,
+  setAuth: (authState: { isAuthenticated: boolean; token: string }) => void
+) => {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+  const updateAuth = { isAuthenticated: true, token };
+  setAuth(updateAuth);
+
+  setTimeout(onSilentRefresh, JWT_EXPIRY_TIME - 60000);
+
+  alert("로그인 성공!");
+};
 
 export async function getUserInfo() {
   try {

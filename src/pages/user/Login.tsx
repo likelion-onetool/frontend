@@ -1,11 +1,15 @@
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Input from "../../components/Input";
 import UserFormGroup from "./components/UserFormGroup";
 import UserLabel from "./components/UserLabel";
 import { useForm } from "react-hook-form";
-import axios from "axios";
-
+import axios, { AxiosResponse } from "axios";
+import { onLoginSuccess } from "../../utils/api";
+import { useRecoilState } from "recoil";
+import { authState } from "../../atoms/authAtom";
+import { useEffect } from "react";
+const JWT_EXPIRY_TIME = 24 * 3600 * 1000;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -97,19 +101,28 @@ interface ILoginForm {
 
 const Login = () => {
   const { register, handleSubmit } = useForm<ILoginForm>();
+  const [auth, setAuth] = useRecoilState(authState);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      navigate("/");
+    }
+  }, [auth, navigate]);
 
   const onValid = async ({ email, password }: ILoginForm) => {
     try {
-      const res = await axios.post(
-        "http://3.37.212.144:8080/users/login",
-        {
-          email,
-          password,
-        },
-        { withCredentials: true }
-      );
-      console.log(res);
+      await axios
+        .post(
+          "/users/login",
+          {
+            email,
+            password,
+          },
+          { withCredentials: true }
+        )
+        .then((res) => onLoginSuccess(res.data.result, setAuth));
     } catch (error) {
+      alert("로그인 실패");
       console.error("Login failed", error);
     }
   };
@@ -117,7 +130,7 @@ const Login = () => {
   const onGoogleSubmit = async () => {
     try {
       await axios.post(
-        "http://3.37.212.144:8080/oauth2/authorization/google",
+        "/oauth2/authorization/google",
         {},
         { withCredentials: true }
       );

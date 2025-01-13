@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate, useNavigate } from "react-router-dom";
 import ListedItems from "./pages/products/ListedItems";
 import DetailedItem from "./pages/products/DetailedItem";
 import Login from "./pages/user/Login";
@@ -15,6 +15,23 @@ import Join from "./pages/user/Join";
 import Profile from "./pages/user/Profile";
 import ErrorComponent from "./components/ErrorComponent";
 import MainPage from "./pages/home/MainPage";
+
+import { useRecoilState } from "recoil";
+import { authState } from "./atoms/authAtom";
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const [auth, setAuth] = useRecoilState(authState);
+
+  if (!auth.isAuthenticated) {
+    return <Navigate to="/users/login" />;
+  }
+
+  return <>{children}</>;
+};
 
 const router = createBrowserRouter([
   {
@@ -61,7 +78,11 @@ const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: <Profile />,
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
@@ -74,7 +95,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: "",
-        element: <ShoppingCart />,
+        element: (
+          <ProtectedRoute>
+            <ShoppingCart />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
