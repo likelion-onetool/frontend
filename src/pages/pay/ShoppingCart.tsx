@@ -3,6 +3,8 @@ import { BsCart4 } from "react-icons/bs";
 import styled from "styled-components";
 import Item from "../../components/Item";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getCartItems } from "../../utils/api";
 
 const Container = styled.div`
   display: flex;
@@ -161,119 +163,145 @@ export const CheckBoxStyled = styled.input`
   margin-right: 12px;
 `;
 
-interface IItem {
-  image: string;
-  name: string;
-  price: number;
+// Blueprint Category Interface
+interface BlueprintCategoryProp {
+  categoryName: string;
+}
+
+// Blueprint Interface
+interface BlueprintProps {
+  id: number;
+  blueprintName: string;
+  blueprintPrice: number;
+  blueprintAuthor: string;
+  blueprintImg: string;
+  blueprintCategories: BlueprintCategoryProp[];
+}
+
+// Response Interface
+interface CartItemsProps {
+  isSuccess: boolean;
+  code: number;
+  message: string;
+  result: {
+    totalPrice: number;
+    totalDiscount: number;
+    blueprintsInCart: BlueprintProps[];
+  };
 }
 
 const ShoppingCart = () => {
-  const [isEmpty, setIsEmpty] = useState<boolean>(true); // 장바구니 비었을 때 테스트용
-  const [items, setItems] = useState<IItem[]>([
-    {
-      image: "./img1.png",
-      name: "판타지 초원 환경(Fantasy GrassField)",
-      price: 13000,
-    },
-    {
-      image: "./img1.png",
-      name: "판타지 초원 환경(Fantasy GrassField)",
-      price: 13000,
-    },
-  ]);
-  const [checkedItems, setCheckedItems] = useState<IItem[]>([]);
-  const [allChecked, setAllChecked] = useState<boolean>(false);
+  const { data, isLoading, error } = useQuery<CartItemsProps>({
+    queryKey: ["cartItems"],
+    queryFn: getCartItems,
+  });
+
+  const [checkedItems, setCheckedItems] = useState<BlueprintProps[]>([]);
+
+  // 전체 선택 상태 계산 (모든 아이템이 체크되었는지 확인)
+  const allChecked =
+    data && data.result.blueprintsInCart
+      ? data.result.blueprintsInCart.length === checkedItems.length &&
+        checkedItems.length > 0
+      : false;
 
   const formatPrice = (price: number) => {
-    return price.toLocaleString();
+    return price?.toLocaleString();
   };
 
-  const totalAmount = items.reduce((total, item) => total + item.price, 0);
-  const discount = 4000;
-  const finalAmount = totalAmount - discount;
-
-  useEffect(() => {
-    if (checkedItems.length === items.length && items.length > 0) {
-      setAllChecked(true);
-    } else {
-      setAllChecked(false);
-    }
-  }, [checkedItems, items]); // 전체 선택 체크박스 로직(다른 체크박스들이 전부 체크되면 전체 체크박스 체크되게)
-  // -- useEffect를 사용하지 않을 경우 setAllchecked함수 때문에 무한 rerendering이 되어버린다.
-
-  const ToggleAllCheck = () => {
+  // 전체 선택/해제 토글
+  const toggleAllCheck = () => {
     if (allChecked) {
-      setCheckedItems([]);
+      setCheckedItems([]); // 모두 해제
     } else {
-      setCheckedItems([...items]);
+      setCheckedItems([...data!.result.blueprintsInCart]); // 모두 선택
     }
-    setAllChecked(!allChecked);
-  }; // 전체 체크박스 토글 로직 및 checkedItem리스트에 아이템들 추가
+  };
 
-  const handleCheck = (item: IItem) => {
+  // 개별 아이템 선택/해제
+  const handleCheck = (item: BlueprintProps) => {
     if (checkedItems.includes(item)) {
-      setCheckedItems(checkedItems.filter((i) => i !== item));
+      setCheckedItems(checkedItems.filter((i) => i.id !== item.id));
+      console.log("delete");
     } else {
+      console.log("add");
+
       setCheckedItems([...checkedItems, item]);
     }
-  }; // 이미 체크되있던 아이템이면 filter로 거르고, 아니면 CheckedItem리스트에 추가
+  };
 
-  return (
-    <Container>
-      {isEmpty ? (
-        <Wrapper>
-          <Circle>
-            <BsCart4 />
-          </Circle>
-          <Empty>장바구니가 비어있어요.</Empty>
-          <Go>지금 담으러 가볼까요?</Go>
-          <FamLink to={"/items"}>인기 작품 구경 가기 &rarr;</FamLink>
-        </Wrapper>
-      ) : (
-        <Wrapper>
-          <Title>장바구니</Title>
-          <SelectButtons>
-            <CheckBoxStyled
-              type="checkbox"
-              onChange={ToggleAllCheck}
-              checked={allChecked}
-            />
-            <Label>전체선택</Label>
-          </SelectButtons>
-          <MainSection>
-            <CartItems>
-              {items.map((item, index) => (
-                <Item
-                  key={index}
-                  item={item}
-                  checked={checkedItems.includes(item)} // 체크된 박스인지는 리스트 하나에서 관리
-                  onCheck={handleCheck}
-                />
-              ))}
-            </CartItems>
-            <CartSummary>
-              <SummaryText>
-                <span>총 상품 금액</span>
-                <Price>{formatPrice(totalAmount)}원</Price>
-              </SummaryText>
-              <SummaryText>
-                <span>총 할인 금액</span>
-                <Price>-{formatPrice(discount)}원</Price>
-              </SummaryText>
-              <SummaryText>
-                <span>결제 금액</span>
-                <ToTalPrice>{formatPrice(finalAmount)}원</ToTalPrice>
-              </SummaryText>
-              <OrderButton>주문하기</OrderButton>
-              <Link to="/items">
-                <ShoppingButton>계속 쇼핑하기</ShoppingButton>
-              </Link>
-            </CartSummary>
-          </MainSection>
-        </Wrapper>
-      )}
-    </Container>
-  );
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>오류가 발생했습니다.</div>;
+  }
+
+  if (data) {
+    return (
+      <Container>
+        {!data.result.blueprintsInCart ? (
+          <Wrapper>
+            <Circle>
+              <BsCart4 />
+            </Circle>
+            <Empty>장바구니가 비어있어요.</Empty>
+            <Go>지금 담으러 가볼까요?</Go>
+            <FamLink to={"/items/category/all"}>
+              인기 작품 구경 가기 &rarr;
+            </FamLink>
+          </Wrapper>
+        ) : (
+          <Wrapper>
+            <Title>장바구니</Title>
+            <SelectButtons>
+              <CheckBoxStyled
+                type="checkbox"
+                onChange={toggleAllCheck}
+                checked={allChecked}
+              />
+              <Label>전체선택</Label>
+            </SelectButtons>
+            <MainSection>
+              <CartItems>
+                {data.result.blueprintsInCart.map((item, index) => (
+                  <Item
+                    key={index}
+                    item={item}
+                    checked={checkedItems.includes(item)} // 선택 상태 전달
+                    onCheck={() => handleCheck(item)} // 클릭 이벤트 핸들러 전달
+                  />
+                ))}
+              </CartItems>
+              <CartSummary>
+                <SummaryText>
+                  <span>총 상품 금액</span>
+                  <Price>{formatPrice(data.result.totalPrice)}원</Price>
+                </SummaryText>
+                <SummaryText>
+                  <span>총 할인 금액</span>
+                  <Price>-{formatPrice(data.result.totalDiscount)}원</Price>
+                </SummaryText>
+                <SummaryText>
+                  <span>결제 금액</span>
+                  <ToTalPrice>
+                    {formatPrice(data.result.totalPrice)}원
+                  </ToTalPrice>
+                </SummaryText>
+                <Link to="/payment">
+                  <OrderButton>주문하기</OrderButton>
+                </Link>
+                <Link to="/items">
+                  <ShoppingButton>계속 쇼핑하기</ShoppingButton>
+                </Link>
+              </CartSummary>
+            </MainSection>
+          </Wrapper>
+        )}
+      </Container>
+    );
+  }
+  return null;
 };
 
 export default ShoppingCart;

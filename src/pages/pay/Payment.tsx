@@ -228,22 +228,6 @@ interface CheckedItems {
 const Payment = () => {
   const [cardToggle, setCardToggle] = useState(false);
 
-  const items = [
-    {
-      image: "./img1.png",
-      name: "판타지 초원 환경(Fantasy GrassField)",
-      price: 13000,
-      checked: false,
-    },
-    {
-      image: "./img1.png",
-      name: "판타지 초원 환경(Fantasy GrassField)",
-      price: 13000,
-      checked: false,
-    },
-  ];
-
-  const totalAmount = items.reduce((total, item) => total + item.price, 0);
   const [personState, setPersonState] = useState<boolean>(true);
   const [institutionState, setInstitutionState] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -292,7 +276,7 @@ const Payment = () => {
         <LuBox />
         <span>주문상품</span>
       </Banner>
-      {items.map((item, index) => (
+      {/* {items.map((item, index) => (
         <CartItem key={index}>
           <ItemImage src={item.image} alt={item.name} />
           <ItemDetails>
@@ -302,7 +286,7 @@ const Payment = () => {
             <ItemPrice>{item.price.toLocaleString()}원</ItemPrice>
           </ItemPriceDetail>
         </CartItem>
-      ))}
+      ))} */}
       <Banner>
         <FaRegUser />
         <span>주문자</span>
@@ -361,7 +345,7 @@ const Payment = () => {
       <PriceWrapper>
         <TotalPrice>
           <span>총 상품 금액</span>
-          <span>{totalAmount.toLocaleString()}</span>
+          {/* <span>{totalAmount.toLocaleString()}</span> */}
         </TotalPrice>
         <Discount>
           <span>총 할인 금액</span>
@@ -370,7 +354,7 @@ const Payment = () => {
       </PriceWrapper>
       <FinalPrice>
         <span>최종 결제 금액</span>
-        <span>{(totalAmount - 4000).toLocaleString()}</span>
+        {/* <span>{(totalAmount - 4000).toLocaleString()}</span> */}
       </FinalPrice>
       <Banner>
         <MdOutlinePayment />

@@ -2,6 +2,8 @@ import React from "react";
 import { GoX } from "react-icons/go";
 import styled from "styled-components";
 import { CheckBoxStyled } from "../pages/pay/ShoppingCart";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteCartItems } from "../utils/api";
 
 const CartItem = styled.div`
   display: flex;
@@ -53,9 +55,10 @@ const Xbutton = styled(GoX)`
 
 interface IItemProps {
   item: {
-    image: string;
-    name: string;
-    price: number;
+    id: number;
+    blueprintImg: string;
+    blueprintName: string;
+    blueprintPrice: number;
   };
   checked: boolean;
   onCheck: (item: IItemProps["item"]) => void;
@@ -66,6 +69,19 @@ const Item = ({ item, checked, onCheck }: IItemProps) => {
     onCheck(item);
   };
 
+  const queryClient = useQueryClient();
+
+  const { mutate } = useMutation({
+    mutationFn: (id: number) => deleteCartItems(item.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cartItems"] }),
+  });
+
+  const onClick = (id: number) => {
+    console.log("장바구니 삭제");
+
+    mutate(id);
+  };
+
   return (
     <CartItem>
       <CheckBoxStyled
@@ -73,13 +89,13 @@ const Item = ({ item, checked, onCheck }: IItemProps) => {
         checked={checked}
         onChange={handleChange}
       />
-      <ItemImage src={item.image} alt={item.name} />
+      <ItemImage src={item.blueprintImg} alt={item.blueprintName} />
       <ItemDetails>
-        <ItemName>{item.name}</ItemName>
+        <ItemName>{item.blueprintName}</ItemName>
       </ItemDetails>
       <ItemPriceDetail>
-        <ItemPrice>{item.price.toLocaleString()}원</ItemPrice>
-        <Xbutton />
+        {/* <ItemPrice>{item.blueprintPrice.toLocaleString()}원</ItemPrice> */}
+        <Xbutton onClick={() => onClick(item.id)} />
       </ItemPriceDetail>
     </CartItem>
   );

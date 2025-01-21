@@ -120,7 +120,11 @@ const Login = () => {
           },
           { withCredentials: true }
         )
-        .then((res) => onLoginSuccess(res.data.result, setAuth));
+        .then((res) =>
+          res.data.isSuccess
+            ? onLoginSuccess(res.data.result, setAuth)
+            : alert("아이디 비밀번호를 확인하세요!")
+        );
     } catch (error) {
       alert("로그인 실패");
       console.error("Login failed", error);

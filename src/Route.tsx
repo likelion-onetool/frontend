@@ -18,6 +18,9 @@ import MainPage from "./pages/home/MainPage";
 
 import { useRecoilState } from "recoil";
 import { authState } from "./atoms/authAtom";
+import { TestPayment } from "./pages/pay/TestPayment";
+import PaymentLoading from "./pages/pay/PaymentLoading";
+import PaymentFail from "./pages/pay/PaymentFail";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -112,8 +115,20 @@ const router = createBrowserRouter([
         element: <Payment />,
       },
       {
+        path: "loading",
+        element: <PaymentLoading />,
+      },
+      {
         path: "success",
         element: <PaymentSuccess />,
+      },
+      {
+        path: "fail",
+        element: <PaymentFail />,
+      },
+      {
+        path: "test",
+        element: <TestPayment />,
       },
     ],
   },

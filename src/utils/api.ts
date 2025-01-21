@@ -41,10 +41,6 @@ export interface BlueprintProps {
   cartBlueprints: any[];
 }
 
-interface ContentProps {
-  blueprint: BlueprintProps;
-}
-
 interface SortProps {
   empty: boolean;
   unsorted: boolean;
@@ -66,7 +62,7 @@ interface ResultProps {
   first: boolean;
   last: boolean;
   size: number;
-  content: ContentProps[];
+  content: BlueprintProps[];
   number: number;
   sort: SortProps;
   numberOfElements: number;
@@ -118,23 +114,10 @@ export async function getDetailItem(id: number) {
   }
 }
 
-export async function getCartItems() {
-  try {
-    const res = await axios.get(`/cart`, {
-      headers: {
-        Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-      },
-    });
-    return res.data;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 // user 관련 api
 
 export async function onSilentRefresh(
-  setAuth: (authState: { isAuthenticated: boolean; token: string }) => void
+  setAuth: (authState: { isAuthenticated: boolean }) => void
 ) {
   try {
     const res = await axios.post("/silent-refresh");
@@ -144,10 +127,10 @@ export async function onSilentRefresh(
     }
     onLoginSuccess(res.data.result, setAuth);
   } catch (error) {
-    console.error("Error during silent refresh:", error); //에러도 제거해야됨
-    // recoil 상태 변경 필요??(기본값이 false니까 안해도 될지도..)
+    console.log("로그인 실패");
 
-    alert("로그인 갱신 실패. 다시 로그인해주세요."); // alert 제거해야됨
+    const updateAuth = { isAuthenticated: false };
+    setAuth(updateAuth);
   }
 }
 
@@ -155,25 +138,65 @@ const JWT_EXPIRY_TIME = 24 * 3600 * 1000;
 
 export const onLoginSuccess = (
   token: string,
-  setAuth: (authState: { isAuthenticated: boolean; token: string }) => void
+  setAuth: (authState: { isAuthenticated: boolean }) => void
 ) => {
   axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-  const updateAuth = { isAuthenticated: true, token };
+  const updateAuth = { isAuthenticated: true };
   setAuth(updateAuth);
 
   setTimeout(onSilentRefresh, JWT_EXPIRY_TIME - 60000);
-
-  alert("로그인 성공!");
 };
 
 export async function getUserInfo() {
   try {
-    const res = await axios.get(`/users`, {
-      headers: {
-        Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-      },
-    });
+    const res = await axios.get(`/users`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getUserPurchase() {
+  try {
+    const res = await axios.get(`/users/myPurchase`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getUserQna() {
+  try {
+    const res = await axios.get(`/users/myQna`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// 장바구니, 결제관련 로직
+export async function getCartItems() {
+  try {
+    const res = await axios.get(`/cart`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function addCartItems(blueprintId: number) {
+  try {
+    const res = await axios.post(`/api/cart/add/${blueprintId}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function deleteCartItems(blueprintId: number) {
+  try {
+    const res = await axios.delete(`/api/cart/delete/${blueprintId}`);
     return res.data;
   } catch (error) {
     console.log(error);
