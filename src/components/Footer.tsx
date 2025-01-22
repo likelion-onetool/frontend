@@ -95,6 +95,7 @@ const ContactContainer = styled.div`
   display: flex;
   flex-direction: column;
   font-size: 13px;
+  gap: 20px;
 `;
 
 const Footer = () => {
@@ -226,15 +227,25 @@ const Footer = () => {
       <BottomContainer>
         <ContactContainer>
           <InfoContainer>
+            <span>고객센터</span>
             <p>
-              주식회사 원툴 &nbsp; 대표: 정재민 &nbsp; 주소: 서울특별시 광진구
-              능동로 209 &nbsp; 사업자등록번호: 690-95-01701
+              전화: 010-2168-9070 &nbsp; 이메일: onetoolfirst@gmail.com &nbsp;
+              민원접수: onetoolfirst@gmail.com
+            </p>
+          </InfoContainer>
+          <InfoContainer>
+            <p>
+              상호명: 원툴 &nbsp; 대표: 정재민 &nbsp; 사업장주소: 서울특별시
+              송파구 동남로 9길 53, 202호(가락동) &nbsp; 사업자등록번호:
+              690-95-01701
             </p>
             <p>
               개인정보관리자: 정재민 &nbsp; 번호(발신전용): 02-878-1201 &nbsp;
-              이메일: onetoolfirst@gmail.com &nbsp; 호스팅제공: Amazon Web
-              Service(AWS) &nbsp; copyright (c) www.onetool.com all rights
-              reserved.
+              유선전화: 010-2168-9070 &nbsp; 이메일: onetoolfirst@gmail.com
+            </p>
+            <p>
+              호스팅제공: Amazon Web Service(AWS) &nbsp; copyright (c)
+              www.onetool.com all rights reserved.
             </p>
           </InfoContainer>
         </ContactContainer>

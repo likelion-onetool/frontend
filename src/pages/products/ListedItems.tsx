@@ -98,7 +98,7 @@ const AllItemsPage = () => {
   const navigate = useNavigate();
   const { id: category } = useParams();
   const search = new URLSearchParams(location.search).get("s");
-  const pageParam = new URLSearchParams(location.search).get("page") || "0";
+  const pageParam = new URLSearchParams(location.search).get("page") || "1";
   const [page, setPage] = useState(parseInt(pageParam, 10));
 
   const { data, isLoading, error } = useQuery<ItemProps>({
@@ -155,22 +155,22 @@ const AllItemsPage = () => {
                 <PaginationContainer>
                   <PaginationButton
                     onClick={() => handlePageChange(page - 1)}
-                    disabled={page === 0}
+                    disabled={page === 1}
                   >
                     이전
                   </PaginationButton>
                   {[...Array(data.result.totalPages)].map((_, index) => (
                     <PaginationButton
                       key={index}
-                      onClick={() => handlePageChange(index)}
-                      disabled={index === page}
+                      onClick={() => handlePageChange(index + 1)}
+                      disabled={index === page - 1}
                     >
                       {index + 1}
                     </PaginationButton>
                   ))}
                   <PaginationButton
                     onClick={() => handlePageChange(page + 1)}
-                    disabled={page + 1 >= (data?.result.totalPages || 1)}
+                    disabled={page >= (data?.result.totalPages || 1)}
                   >
                     다음
                   </PaginationButton>

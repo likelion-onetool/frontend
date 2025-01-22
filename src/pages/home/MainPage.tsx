@@ -6,6 +6,8 @@ import MainBanner from "../../components/MainBanner";
 import Footer from "../../components/Footer";
 import { blueprint } from "../../dummy/blueprint";
 import { formatPrice } from "../../utils/formatPrice";
+import { useQuery } from "@tanstack/react-query";
+import { getAllItems, ItemProps } from "../../utils/api";
 
 const MainContainer = styled.div`
   display: flex;
@@ -167,8 +169,16 @@ const MainPage = () => {
   const onClick = (id: number) => {
     navigate(`/items/${id}`);
   };
+  const { data, isLoading, error } = useQuery<ItemProps>({
+    queryKey: ["items", "all", 1],
+    queryFn: () => getAllItems(1, 6),
+  });
 
-  return (
+  if (isLoading) {
+    <div>Loading...</div>;
+  }
+
+  return data && data.isSuccess === true && data.result.content.length > 0 ? (
     <>
       <TopNavBar />
       <MainContainer>
@@ -194,7 +204,7 @@ const MainPage = () => {
 
             <GridTitle>인기 도면 한 눈에 확인하기 &gt;</GridTitle>
             <BluePrintList>
-              {blueprint.map((item) => (
+              {data.result.content.map((item) => (
                 <BluePrintCard key={item.id} onClick={() => onClick(item.id)}>
                   <img src={item.blueprintImg} alt={item.blueprintName} />
                   <BluePrintCardDetail>
@@ -202,9 +212,9 @@ const MainPage = () => {
                     <BluePrintName>{item.blueprintName}</BluePrintName>
                     <BluePrintPrice>
                       <SalePrice>{formatPrice(item.standardPrice)}원</SalePrice>
-                      <OriginalPrice>
+                      {/* <OriginalPrice>
                         {formatPrice(item.standardPrice)}원
-                      </OriginalPrice>
+                      </OriginalPrice> */}
                     </BluePrintPrice>
                   </BluePrintCardDetail>
                 </BluePrintCard>
@@ -215,7 +225,7 @@ const MainPage = () => {
       </MainContainer>
       <Footer />
     </>
-  );
+  ) : null;
 };
 
 export default MainPage;

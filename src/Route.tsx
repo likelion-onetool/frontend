@@ -18,7 +18,6 @@ import MainPage from "./pages/home/MainPage";
 
 import { useRecoilState } from "recoil";
 import { authState } from "./atoms/authAtom";
-import { TestPayment } from "./pages/pay/TestPayment";
 import PaymentLoading from "./pages/pay/PaymentLoading";
 import PaymentFail from "./pages/pay/PaymentFail";
 
@@ -125,10 +124,6 @@ const router = createBrowserRouter([
       {
         path: "fail",
         element: <PaymentFail />,
-      },
-      {
-        path: "test",
-        element: <TestPayment />,
       },
     ],
   },

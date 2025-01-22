@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { BsCart4 } from "react-icons/bs";
 import styled from "styled-components";
 import Item from "../../components/Item";
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { getCartItems } from "../../utils/api";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { addPayItems, getCartItems } from "../../utils/api";
 
 const Container = styled.div`
   display: flex;
@@ -230,6 +230,27 @@ const ShoppingCart = () => {
     }
   };
 
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const handleBuyClick = async (blueprintIds: number[]) => {
+    if (blueprintIds.length > 0) {
+      try {
+        const addPayItem = await addPayItems(blueprintIds);
+        if (addPayItem.isSuccess === true) {
+          queryClient.invalidateQueries({ queryKey: ["payItems"] });
+          navigate("/payment");
+        } else {
+          throw new Error("결제 처리에 실패했습니다.");
+        }
+      } catch (error) {
+        alert("메시지" + error);
+      }
+    } else {
+      alert("구매할 제품을 선택해주세요!");
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -288,10 +309,12 @@ const ShoppingCart = () => {
                     {formatPrice(data.result.totalPrice)}원
                   </ToTalPrice>
                 </SummaryText>
-                <Link to="/payment">
-                  <OrderButton>주문하기</OrderButton>
-                </Link>
-                <Link to="/items">
+                <OrderButton
+                  onClick={() => handleBuyClick(checkedItems.map((i) => i.id))}
+                >
+                  주문하기
+                </OrderButton>
+                <Link to="/items/category/all">
                   <ShoppingButton>계속 쇼핑하기</ShoppingButton>
                 </Link>
               </CartSummary>

@@ -6,8 +6,10 @@ import { blueprint, IBluePrintDetail } from "../../dummy/blueprint";
 import { formatPrice } from "../../utils/formatPrice";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { addCartItems, getDetailItem } from "../../utils/api";
-import { useEffect } from "react";
+import { addCartItems, addPayItems, getDetailItem } from "../../utils/api";
+import { useEffect, useRef, useState } from "react";
+import RuleTable from "../../components/RuleTable";
+import axios, { AxiosError } from "axios";
 
 const OuterContainer = styled.div`
   display: flex;
@@ -223,6 +225,7 @@ const SecondContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 100px;
 
   @media (max-width: 768px) {
     width: 100%;
@@ -231,17 +234,20 @@ const SecondContainer = styled.div`
 
 const ToggleBar = styled.div`
   width: 100%;
-  height: 47px;
   margin-bottom: 16px;
   border-bottom: 1px solid #ccc;
-
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: white;
   @media (max-width: 768px) {
     width: 100%;
   }
 `;
 
 const ToggleButton = styled.button`
-  padding: 10px 20px;
+  height: 100%;
+  padding: 20px 40px;
   cursor: pointer;
   font-weight: 800;
   font-size: 15.13px;
@@ -282,12 +288,20 @@ const DetailImg = styled.img`
   }
 `;
 
+const ContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+`;
+
 interface DetailItemResultProps {
   id: number;
   blueprintName: string;
   categoryId: number;
   standardPrice: number;
   blueprintImg: string;
+  detailImage: string;
   blueprintDetails: string;
   extension: string;
   program: string;
@@ -311,21 +325,80 @@ const DetailedItem = () => {
     queryFn: () => getDetailItem(Number(id)),
   });
 
+  const [activeTab, setActiveTab] = useState<"detail" | "rule">("detail");
+  const detailRef = useRef<HTMLDivElement>(null);
+  const ruleRef = useRef<HTMLDivElement>(null);
+
+  const scrollToSection = (section: "detail" | "rule") => {
+    setActiveTab(section);
+    if (section === "detail" && detailRef.current) {
+      detailRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (section === "rule" && ruleRef.current) {
+      ruleRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          if (entry.target === detailRef.current) {
+            setActiveTab("detail");
+          } else if (entry.target === ruleRef.current) {
+            setActiveTab("rule");
+          }
+        }
+      });
+    }, observerOptions);
+
+    if (detailRef.current) observer.observe(detailRef.current);
+    if (ruleRef.current) observer.observe(ruleRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [detailRef, ruleRef]);
+
   const handleBuyClick = async (blueprintId: number) => {
-    const data = await addCartItems(blueprintId);
-    if (data.message === "Success") {
-      navigate("/payment");
+    try {
+      const addPayItem = await addPayItems([blueprintId]);
+      if (addPayItem && addPayItem.isSuccess === true) {
+        queryClient.invalidateQueries({ queryKey: ["payItems"] });
+        navigate("/payment");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 400) {
+        alert("로그인을 해주세요!");
+        navigate("/users/login");
+      } else {
+        console.error("Unexpected error occurred:", error);
+      }
     }
   };
 
   const handleCartClick = async (blueprintId: number) => {
-    const data = await addCartItems(blueprintId);
+    try {
+      const data = await addCartItems(blueprintId);
 
-    if (data.isSuccess === true) {
-      queryClient.invalidateQueries({ queryKey: ["cartItems"] });
-      navigate("/cart");
-    } else {
-      alert("이미 장바구니에 아이템이 존재합니다!");
+      if (data && data.isSuccess === true) {
+        queryClient.invalidateQueries({ queryKey: ["cartItems"] });
+        navigate("/cart");
+      } else if (data && data.message === "장바구니에 존재하는 상품입니다.") {
+        alert("이미 장바구니에 존재합니다!");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 400) {
+        alert("로그인을 해주세요!");
+        navigate("/users/login");
+      } else {
+        console.error("Unexpected error occurred:", error);
+      }
     }
   };
 
@@ -373,10 +446,36 @@ const DetailedItem = () => {
               </FirstContainer>
               <SecondContainer>
                 <ToggleBar>
-                  <ToggleButton>상세설명</ToggleButton>
+                  <ToggleButton
+                    onClick={() => scrollToSection("detail")}
+                    style={{
+                      backgroundColor:
+                        activeTab === "detail" ? "#ddd" : "transparent",
+                      fontWeight: activeTab === "detail" ? "bold" : "normal",
+                      borderRight: "1px solid #ccc",
+                    }}
+                  >
+                    상세설명
+                  </ToggleButton>
+                  <ToggleButton
+                    onClick={() => scrollToSection("rule")}
+                    style={{
+                      backgroundColor:
+                        activeTab === "rule" ? "#ddd" : "transparent",
+                      fontWeight: activeTab === "rule" ? "bold" : "normal",
+                    }}
+                  >
+                    환불/교환/배송 규정
+                  </ToggleButton>
                 </ToggleBar>
-                <BlueBox>{data.result.blueprintDetails}</BlueBox>
-                <DetailImg src={`${data.result.blueprintImg}`} alt="" />
+                <ContentContainer ref={detailRef}>
+                  <BlueBox>{data.result.blueprintDetails}</BlueBox>
+
+                  <DetailImg src={`${data.result.detailImage}`} alt="" />
+                </ContentContainer>
+                <ContentContainer ref={ruleRef}>
+                  <RuleTable />
+                </ContentContainer>
               </SecondContainer>
             </MainContainer>
           </OuterContainer>
