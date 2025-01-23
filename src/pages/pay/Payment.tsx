@@ -262,7 +262,7 @@ const Payment = () => {
               <Input
                 type="text"
                 placeholder="홍길동"
-                {...register("name", { required: "이 필드는 필수입니다." })}
+                {...register("name", { required: "이름을 입력해주세요." })}
               />
               {errors.name && <span>{errors.name.message}</span>}
             </FormGroup>
@@ -270,8 +270,10 @@ const Payment = () => {
               <Label>휴대폰 번호</Label>
               <Input
                 type="text"
-                placeholder="010-1234-5678"
-                {...register("phone", { required: "이 필드는 필수입니다." })}
+                placeholder="01012345678"
+                {...register("phone", {
+                  required: "휴대폰번호를 입력해주세요.",
+                })}
               />
               {errors.phone && <span>{errors.phone.message}</span>}
             </FormGroup>
@@ -280,7 +282,7 @@ const Payment = () => {
               <Input
                 type="email"
                 placeholder="example@example.com"
-                {...register("email", { required: "이 필드는 필수입니다." })}
+                {...register("email", { required: "이메일을 입력해주세요." })}
               />
               {errors.email && <span>{errors.email.message}</span>}
             </FormGroup>

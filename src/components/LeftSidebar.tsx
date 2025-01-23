@@ -89,7 +89,7 @@ const LeftSidebar = () => {
         </CategoryHeader>
         <CategoryContainer>
           <MainCategoryContainer>
-            <Category to={"/items/category/all"}>전체</Category>
+            <Category to={"/items/category/all?page=1"}>전체</Category>
           </MainCategoryContainer>
 
           <MainCategoryContainer>

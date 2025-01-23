@@ -4,7 +4,12 @@ import ItemCard from "../../components/ItemCard";
 import LeftSidebar from "../../components/LeftSidebar";
 import TopNavBar from "../../components/TopNavBar";
 import Footer from "../../components/Footer";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   getAllItems,
@@ -98,8 +103,8 @@ const AllItemsPage = () => {
   const navigate = useNavigate();
   const { id: category } = useParams();
   const search = new URLSearchParams(location.search).get("s");
-  const pageParam = new URLSearchParams(location.search).get("page") || "1";
-  const [page, setPage] = useState(parseInt(pageParam, 10));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1", 10);
 
   const { data, isLoading, error } = useQuery<ItemProps>({
     queryKey: search
@@ -113,14 +118,14 @@ const AllItemsPage = () => {
       return getCategoryItems({ category, page });
     },
   });
+  console.log(data);
+
   // refactoring 필요함. all api를 버리고 전부 sort api로 받아오는걸로 통일
   // category id?, 정렬 방식, 오름/내림,
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    navigate({
-      search: `?${search ? `s=${search}&` : ""}page=${newPage}`,
-    });
+    searchParams.set("page", newPage.toString());
+    setSearchParams(searchParams); // URL 업데이트
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -161,9 +166,9 @@ const AllItemsPage = () => {
                   </PaginationButton>
                   {[...Array(data.result.totalPages)].map((_, index) => (
                     <PaginationButton
-                      key={index}
+                      key={index + 1}
                       onClick={() => handlePageChange(index + 1)}
-                      disabled={index === page - 1}
+                      disabled={index + 1 === page}
                     >
                       {index + 1}
                     </PaginationButton>

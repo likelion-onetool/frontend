@@ -56,7 +56,7 @@ export default function TopNavBar() {
   const navigate = useNavigate();
 
   const handleSearch = ({ search }: FormProps) => {
-    navigate(`/items?s=${search}&page=${0}`);
+    navigate(`/items?s=${search}&page=${1}`);
   };
 
   return (

@@ -170,8 +170,8 @@ const MainPage = () => {
     navigate(`/items/${id}`);
   };
   const { data, isLoading, error } = useQuery<ItemProps>({
-    queryKey: ["items", "all", 1],
-    queryFn: () => getAllItems(1, 6),
+    queryKey: ["items", "all", "main"],
+    queryFn: () => getAllItems(0, 6),
   });
 
   if (isLoading) {
