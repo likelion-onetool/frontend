@@ -305,13 +305,17 @@ interface PurchasedItemProps {
 
 interface QnaItemProps {
   title: string;
-  content: string;
-  date_created: string;
-  url: string;
+  writer: string;
+  postDate: string;
+  views: number;
+  replies: number;
 }
 
 interface QnaProps {
-  qna: QnaItemProps[];
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: QnaItemProps[];
 }
 
 const Profile = () => {
@@ -538,13 +542,13 @@ const Profile = () => {
               <li>문의 내용</li>
               <li>문의 상태</li>
             </HistoryListBox>
-            {/* <HistoryElementBox>
-              {userQnaData!.qna.length > 0 ? (
-                userQnaData!.qna.map((item, index) => (
+            <HistoryElementBox>
+              {userQnaData!.result.length > 0 ? (
+                userQnaData!.result.map((item, index) => (
                   <ListItem key={index}>
                     <ItemInfo>
                       <ItemName>{item.title}</ItemName>
-                      <ItemPrice>{item.content}</ItemPrice>
+                      <ItemPrice>{item.postDate}</ItemPrice>
                     </ItemInfo>
                   </ListItem>
                 ))
@@ -553,7 +557,7 @@ const Profile = () => {
                   <p>문의 내역이 없습니다.</p>
                 </HistoryElementBox>
               )}
-            </HistoryElementBox> */}
+            </HistoryElementBox>
           </HistoryWrapper>
         </Container>
       ) : (
