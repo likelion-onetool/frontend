@@ -8,9 +8,9 @@ export const authState = atom({
 });
 
 interface OrderListProps {
-  customerEmail: string;
+  customerBank: string;
   customerName: string;
-  customerMobilePhone: string;
+  customerBankNumber: string;
   bluePrintNames: string[];
   totalAmount: number;
 }
@@ -18,9 +18,9 @@ interface OrderListProps {
 export const payItems = atom<OrderListProps>({
   key: "payItems",
   default: {
-    customerEmail: "example@example.com",
+    customerBank: "example@example.com",
     customerName: "엄준식",
-    customerMobilePhone: "01000000000",
+    customerBankNumber: "01000000000",
     bluePrintNames: [],
     totalAmount: 0,
   },

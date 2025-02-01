@@ -4,10 +4,11 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
-import { getUserInfo, getUserPurchase, getUserQna } from "../../utils/api";
+import { getOrder, getUserInfo, getUserQna } from "../../utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useRecoilState } from "recoil";
 import { authState } from "../../atoms/authAtom";
+import { formatPrice } from "../../utils/formatPrice";
 
 const Container = styled.div`
   display: flex;
@@ -205,36 +206,33 @@ const HitoryTitle = styled.div`
   font-weight: 600;
 `;
 
-const HistoryListBox = styled.ul`
+const HistoryTable = styled.table`
   width: 100%;
-  display: flex;
-  justify-content: space-between;
+  border-collapse: collapse;
   background-color: #fafafc;
-  border-bottom: 1px solid #eaeaea;
-  padding: 10px 0;
   font-weight: 600;
   font-size: 13px;
-
-  li {
-    flex: 1;
-    text-align: center;
-    color: #333;
-  }
 `;
 
-const HistoryElementBox = styled.div`
-  width: 100%;
+const HistoryTableHeader = styled.thead`
+  background-color: #fafafc;
   border-bottom: 1px solid #eaeaea;
-  padding: 15px 0;
+`;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  font-size: 14px;
+const HistoryTableRow = styled.tr`
+  border-bottom: 1px solid #eaeaea;
+`;
 
-  &:last-child {
-    border-bottom: none;
-  }
+const HistoryTableCell = styled.td`
+  padding: 10px 0;
+  text-align: center;
+  color: #333;
+`;
+
+const HistoryTableHeaderCell = styled.th`
+  padding: 10px 0;
+  text-align: center;
+  color: #333;
 `;
 
 const ErrorMessage = styled.p`
@@ -242,30 +240,9 @@ const ErrorMessage = styled.p`
   font-size: 12px;
 `;
 
-const ListItem = styled.li`
-  display: flex;
-  margin-bottom: 10px;
-`;
-
-const ItemImage = styled.img`
-  width: 50px;
-  height: 50px;
-  margin-right: 10px;
-`;
-
-const ItemInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
 const ItemName = styled.span`
   font-size: 14px;
   font-weight: bold;
-`;
-
-const ItemPrice = styled.span`
-  font-size: 12px;
-  color: grey;
 `;
 
 interface ProfileResultProps {
@@ -295,12 +272,18 @@ interface IForm {
   phoneNum: string;
 }
 
+interface PurchasedItemResultProps {
+  orderName: string;
+  orderId: number;
+  totalPrice: number;
+  status: boolean;
+}
+
 interface PurchasedItemProps {
-  blueprintId: number;
-  blueprintImage: string;
-  blueprintUrl: string;
-  blueprintName: string;
-  blueprintAuthor: string;
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: PurchasedItemResultProps[];
 }
 
 interface QnaItemProps {
@@ -329,9 +312,9 @@ const Profile = () => {
     data: purchasedData,
     isLoading: purchasedIsLoading,
     error: purchasedError,
-  } = useQuery<PurchasedItemProps[]>({
+  } = useQuery<PurchasedItemProps>({
     queryKey: ["userPurchased"],
-    queryFn: getUserPurchase,
+    queryFn: getOrder,
   });
 
   const {
@@ -508,56 +491,76 @@ const Profile = () => {
             <HitoryTitle>
               <span>최근 주문 내역</span>
             </HitoryTitle>
-            <HistoryListBox>
-              <li>상품 정보</li>
-            </HistoryListBox>
-            <HistoryElementBox>
-              {purchasedData!.length > 0 ? (
-                purchasedData!.map((item, index) => (
-                  <ListItem key={index}>
-                    <ItemImage
-                      src={item.blueprintImage}
-                      alt={item.blueprintName}
-                    />
-                    <ItemInfo>
-                      <ItemName>{item.blueprintName}</ItemName>
-                      <ItemPrice>{item.blueprintAuthor}</ItemPrice>
-                    </ItemInfo>
-                  </ListItem>
-                ))
-              ) : (
-                <HistoryElementBox>
-                  <p>주문 내역이 없습니다.</p>
-                </HistoryElementBox>
-              )}
-            </HistoryElementBox>
+            <HistoryTable>
+              <HistoryTableHeader>
+                <tr>
+                  <HistoryTableHeaderCell>상품 정보</HistoryTableHeaderCell>
+                  <HistoryTableHeaderCell>주문 번호</HistoryTableHeaderCell>
+                  <HistoryTableHeaderCell>상품 금액</HistoryTableHeaderCell>
+                  <HistoryTableHeaderCell>주문 상태</HistoryTableHeaderCell>
+                </tr>
+              </HistoryTableHeader>
+              <tbody>
+                {purchasedData!.result.length > 0 ? (
+                  purchasedData!.result.map((item, index) => (
+                    <HistoryTableRow key={index}>
+                      <HistoryTableCell>
+                        <ItemName>{item.orderName}</ItemName>
+                      </HistoryTableCell>
+                      <HistoryTableCell>{item.orderId}</HistoryTableCell>
+                      <HistoryTableCell>
+                        {formatPrice(item.totalPrice)}원
+                      </HistoryTableCell>
+                      <HistoryTableCell>
+                        {item.status ? "완료" : "처리 중"}
+                      </HistoryTableCell>
+                    </HistoryTableRow>
+                  ))
+                ) : (
+                  <HistoryTableRow>
+                    <HistoryTableCell colSpan={4}>
+                      주문 내역이 없습니다.
+                    </HistoryTableCell>
+                  </HistoryTableRow>
+                )}
+              </tbody>
+            </HistoryTable>
           </HistoryWrapper>
+
           <HistoryWrapper>
             <HitoryTitle>
               <span>나의 문의 내역</span>
             </HitoryTitle>
-            <HistoryListBox>
-              <li>날짜</li>
-              <li>문의 제목</li>
-              <li>문의 내용</li>
-              <li>문의 상태</li>
-            </HistoryListBox>
-            <HistoryElementBox>
-              {userQnaData!.result.length > 0 ? (
-                userQnaData!.result.map((item, index) => (
-                  <ListItem key={index}>
-                    <ItemInfo>
-                      <ItemName>{item.title}</ItemName>
-                      <ItemPrice>{item.postDate}</ItemPrice>
-                    </ItemInfo>
-                  </ListItem>
-                ))
-              ) : (
-                <HistoryElementBox>
-                  <p>문의 내역이 없습니다.</p>
-                </HistoryElementBox>
-              )}
-            </HistoryElementBox>
+            <HistoryTable>
+              <HistoryTableHeader>
+                <tr>
+                  <HistoryTableHeaderCell>날짜</HistoryTableHeaderCell>
+                  <HistoryTableHeaderCell>문의 제목</HistoryTableHeaderCell>
+                  <HistoryTableHeaderCell>문의 내용</HistoryTableHeaderCell>
+                  <HistoryTableHeaderCell>문의 상태</HistoryTableHeaderCell>
+                </tr>
+              </HistoryTableHeader>
+              <tbody>
+                {userQnaData!.result.length > 0 ? (
+                  userQnaData!.result.map((item, index) => (
+                    <HistoryTableRow key={index}>
+                      <HistoryTableCell>{item.postDate}</HistoryTableCell>
+                      <HistoryTableCell>{item.title}</HistoryTableCell>
+                      <HistoryTableCell>{item.writer}</HistoryTableCell>
+                      <HistoryTableCell>
+                        {item.replies > 0 ? "답변 완료" : "대기 중"}
+                      </HistoryTableCell>
+                    </HistoryTableRow>
+                  ))
+                ) : (
+                  <HistoryTableRow>
+                    <HistoryTableCell colSpan={4}>
+                      문의 내역이 없습니다.
+                    </HistoryTableCell>
+                  </HistoryTableRow>
+                )}
+              </tbody>
+            </HistoryTable>
           </HistoryWrapper>
         </Container>
       ) : (
