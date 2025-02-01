@@ -157,15 +157,6 @@ export async function getUserInfo() {
   }
 }
 
-export async function getUserPurchase() {
-  try {
-    const res = await axios.get(`/users/myPurchase`);
-    return res.data;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 export async function getUserQna() {
   try {
     const res = await axios.get(`/users/myQna`);
@@ -216,6 +207,51 @@ export async function addPayItems(itemIdLists: number[]) {
 export async function deletePayItems() {
   try {
     const res = await axios.delete(`/cart/session/drop`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// 주문 생성 및 결제 흐름
+interface CreateOrderResultsProps {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: number;
+}
+
+export async function createOrder(blueprintIds: number[]) {
+  try {
+    const res = await axios.post<CreateOrderResultsProps>(`/orders`, {
+      blueprintIds,
+    });
+    return res.data;
+  } catch (error) {
+    alert("주문 작성 에러 발생!");
+  }
+}
+
+export async function getOrder() {
+  try {
+    const res = await axios.get(`/orders`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export interface PaymentsDetailProps {
+  orderId: number;
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  totalPrice: number;
+}
+
+export async function postPayments(paymentsDetail: PaymentsDetailProps) {
+  try {
+    const res = await axios.post(`/payments/deposit`, paymentsDetail);
     return res.data;
   } catch (error) {
     console.log(error);

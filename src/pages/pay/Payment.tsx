@@ -1,10 +1,14 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getPayItems } from "../../utils/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createOrder,
+  getPayItems,
+  PaymentsDetailProps,
+  postPayments,
+} from "../../utils/api";
 import { useForm } from "react-hook-form";
-import { useRecoilState } from "recoil";
-import { payItems } from "../../atoms/authAtom";
+import { useNavigate } from "react-router-dom";
 
 const banks = [
   { value: "kb", label: "국민은행" },
@@ -259,6 +263,8 @@ const Payment = () => {
   const [personState, setPersonState] = useState<boolean>(true);
   const [institutionState, setInstitutionState] = useState<boolean>(false);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [blueprintIds, setBlueprintIds] = useState<number[]>([]);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -294,13 +300,71 @@ const Payment = () => {
     if (data && data.result) {
       const total = data.result.reduce((acc, cur) => acc + cur.price, 0);
       setTotalAmount(total);
+      const blueprintIds = data.result.map((item) => item.blueprintId);
+      setBlueprintIds(blueprintIds);
     }
   }, [data]);
 
-  const handlePurchaseClick = async () => {
+  const CreateOrderMutation = () => {
+    return useMutation({
+      mutationFn: (blueprintIds: number[]) => createOrder(blueprintIds),
+      onError: (error) => {
+        console.error("주문 생성 실패:", error);
+        alert("주문 생성 중 오류가 발생했습니다.");
+      },
+    });
+  };
+
+  const PostPaymentsMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: (paymentsDetail: PaymentsDetailProps) =>
+        postPayments(paymentsDetail),
+      onSuccess: () => {
+        // 결제 성공 시 쿼리 무효화
+        queryClient.invalidateQueries({ queryKey: ["userPurchased"] });
+        alert("주문이 완료되었습니다!");
+        navigate("/users/profile");
+      },
+      onError: (error) => {
+        console.error("결제 실패:", error);
+        alert("결제 중 오류가 발생했습니다.");
+      },
+    });
+  };
+
+  const orderMutation = CreateOrderMutation();
+  const paymentMutation = PostPaymentsMutation();
+
+  const handlePurchaseClick = async ({
+    name,
+    bankNumber,
+    bank,
+  }: PayFormProps) => {
     if (!isAllChecked()) {
       alert("유의사항에 전부 동의해주세요!");
-    } else {
+      return;
+    }
+
+    try {
+      // 주문 생성
+      const orderData = await orderMutation.mutateAsync(blueprintIds);
+
+      if (orderData && orderData.result) {
+        // 결제 정보 전송
+        const paymentsDetail = {
+          orderId: orderData.result,
+          accountName: name,
+          accountNumber: bankNumber,
+          bankName: bank,
+          totalPrice: totalAmount,
+        };
+        await paymentMutation.mutateAsync(paymentsDetail);
+      } else {
+        alert("주문 데이터가 유효하지 않습니다.");
+      }
+    } catch (error) {
+      console.error("주문 또는 결제 실패:", error);
     }
   };
 
