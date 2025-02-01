@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
 import { getOrder, getUserInfo, getUserQna } from "../../utils/api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRecoilState } from "recoil";
 import { authState } from "../../atoms/authAtom";
 import { formatPrice } from "../../utils/formatPrice";
@@ -313,7 +313,7 @@ const Profile = () => {
     isLoading: purchasedIsLoading,
     error: purchasedError,
   } = useQuery<PurchasedItemProps>({
-    queryKey: ["userPurchased"],
+    queryKey: ["profile", "userPurchased"],
     queryFn: getOrder,
   });
 
@@ -322,9 +322,11 @@ const Profile = () => {
     isLoading: userQnaIsLoading,
     error: userQnaError,
   } = useQuery<QnaProps>({
-    queryKey: ["userQna"],
+    queryKey: ["profile", "userQna"],
     queryFn: getUserQna,
   });
+
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -374,6 +376,7 @@ const Profile = () => {
   const logOutClick = async () => {
     const res = await axios.delete("/users/logout");
     if (res.data.isSuccess) {
+      queryClient.removeQueries({ queryKey: ["profile"] });
       alert("로그아웃 되었습니다.");
       const updateAuth = { isAuthenticated: false };
       setAuth(updateAuth);
