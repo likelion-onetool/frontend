@@ -150,6 +150,37 @@ const ErrorMessage = styled.p`
   margin-top: 5px;
 `;
 
+// 스타일 추가
+const VerificationWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+`;
+
+const VerificationInput = styled(Input)`
+  width: 100%;
+`;
+
+const VerificationButton = styled.button`
+  padding: 8px 16px;
+  background-color: rgba(29, 53, 136, 1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
+
+const SuccessMessage = styled.p`
+  color: green;
+  font-size: 12px;
+  margin-top: 5px;
+`;
+
 interface IForm {
   email: string;
   password: string;
@@ -169,7 +200,10 @@ const Join = () => {
     watch,
   } = useForm<IForm>();
   const [checkBoxes, setCheckBoxes] = useState<string[]>([]);
+  const [isVerified, setIsVerified] = useState(false);
   const [allChecked, setAllChecked] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [showCode, setShowCode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -198,6 +232,12 @@ const Join = () => {
 
   const onValid = async (data: IForm) => {
     try {
+      //이메일 인증 확인
+      if (!isVerified) {
+        alert("이메일인증을 해주세요.");
+        return;
+      }
+
       // 비밀번호 일치 확인
       if (data.password !== data.passwordConfirm) {
         alert("비밀번호가 일치하지 않습니다.");
@@ -220,12 +260,64 @@ const Join = () => {
 
       // 데이터 전송
       const res = await axios.post(`/users/signup`, payload);
-      if (res.status === 201) {
+      if (res.data.isSuccess) {
         alert("회원가입이 완료되었습니다.");
         navigate("/users/login");
+      } else if (!res.data.isSuccess && res.data.code === "COMMON-0002") {
+        alert("이미 존재하는 회원입니다.");
       }
     } catch (error) {
       console.error("Error submitting data:", error);
+    }
+  };
+
+  const handleVerifyClick = async () => {
+    const email = watch("email"); // react-hook-form의 watch를 사용하여 이메일 값을 가져옴
+
+    // 이메일 유효성 검사
+    if (
+      !email ||
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+    ) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `/users/email/verification-requests?email=${email}`
+      );
+      if (res.data.isSuccess) {
+        alert("이메일로 인증 코드가 발송되었습니다. 이메일을 확인해주세요.");
+        setShowCode(true);
+      }
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      alert("이메일 인증 요청에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  const handleCodeVerification = async () => {
+    const email = watch("email");
+
+    if (!verificationCode) {
+      alert("인증 코드를 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        `/users/email/verifications?email=${email}&code=${verificationCode}`
+      );
+      if (res.data.isSuccess) {
+        alert("이메일 인증이 완료되었습니다.");
+        setIsVerified(true);
+      } else {
+        alert("인증 코드가 일치하지 않습니다.");
+      }
+    } catch (error) {
+      console.error("Error verifying code:", error);
+      alert("인증 코드 검증에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -284,8 +376,34 @@ const Join = () => {
               },
             })}
           />
+          <VerificationButton type="button" onClick={handleVerifyClick}>
+            {showCode ? "재전송" : "인증코드 요청"}
+          </VerificationButton>
           {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
         </Wrapper>
+        {/* 인증 코드 입력 필드 */}
+        {showCode && (
+          <VerificationWrapper>
+            <span>인증 코드</span>
+            <VerificationInput
+              type="text"
+              placeholder="이메일로 발송된 인증 코드를 입력하세요"
+              value={verificationCode}
+              onChange={(e: any) => setVerificationCode(e.target.value)}
+              disabled={isVerified} // 인증 성공 시 비활성화
+            />
+            <VerificationButton
+              type="button"
+              onClick={handleCodeVerification}
+              disabled={isVerified} // 인증 성공 시 비활성화
+            >
+              인증 코드 확인
+            </VerificationButton>
+            {isVerified && (
+              <SuccessMessage>이메일 인증이 완료되었습니다.</SuccessMessage>
+            )}
+          </VerificationWrapper>
+        )}
 
         <Wrapper>
           <span>비밀번호</span>
