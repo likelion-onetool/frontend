@@ -10,7 +10,7 @@ import {
   getUserInfo,
   getUserQna,
 } from "../../utils/api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRecoilState } from "recoil";
 import { authState } from "../../atoms/authAtom";
 import { formatPrice } from "../../utils/formatPrice";
@@ -208,7 +208,6 @@ const ProfilePic = styled.div`
 const HitoryTitle = styled.div`
   text-align: center;
   padding: 24px 0;
-  border-bottom: 1px solid #cdcdcd;
   font-size: 18px;
   font-weight: 600;
 `;
@@ -228,6 +227,7 @@ const HistoryTableHeader = styled.thead`
 
 const HistoryTableRow = styled.tr`
   border-bottom: 1px solid #eaeaea;
+  cursor: pointer;
 `;
 
 const HistoryTableCell = styled.td`
@@ -250,6 +250,13 @@ const ErrorMessage = styled.p`
 const ItemName = styled.span`
   font-size: 14px;
   font-weight: bold;
+`;
+
+const Guide = styled.span`
+  font-size: 12px;
+  color: red;
+  display: block;
+  text-align: right;
 `;
 
 interface ProfileResultProps {
@@ -336,7 +343,7 @@ const Profile = () => {
     isLoading: purchasedIsLoading,
     error: purchasedError,
   } = useQuery<PurchasedItemProps>({
-    queryKey: ["userPurchased"],
+    queryKey: ["profile", "userPurchased"],
     queryFn: getOrder,
   });
 
@@ -354,9 +361,11 @@ const Profile = () => {
     isLoading: userQnaIsLoading,
     error: userQnaError,
   } = useQuery<QnaProps>({
-    queryKey: ["userQna"],
+    queryKey: ["profile", "userQna"],
     queryFn: getUserQna,
   });
+
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -388,7 +397,16 @@ const Profile = () => {
         name,
         phone_num: phoneNum,
       });
-      alert("정보가 성공적으로 수정되었습니다.");
+      const outRes = await axios.delete("/users/logout");
+      if (outRes.data.isSuccess) {
+        queryClient.removeQueries({ queryKey: ["profile"] });
+        const updateAuth = { isAuthenticated: false };
+        setAuth(updateAuth);
+        alert(
+          "정보가 성공적으로 수정되었습니다. 보안을 위해 재로그인을 해주세요!"
+        );
+        navigate("/");
+      }
     } catch (error) {
       console.error(error);
       alert("정보 수정에 실패했습니다.");
@@ -400,8 +418,13 @@ const Profile = () => {
       const res = await axios.delete("/users");
       if (res.status === 200) {
         alert("탈퇴가 완료되었습니다.");
-        // 탈퇴시에도 로그아웃처럼 토큰 만료처리
-        navigate("/");
+        const outRes = await axios.delete("/users/logout");
+        if (outRes.data.isSuccess) {
+          queryClient.removeQueries({ queryKey: ["profile"] });
+          const updateAuth = { isAuthenticated: false };
+          setAuth(updateAuth);
+          navigate("/");
+        }
       }
     } catch (error) {
       console.log(error);
@@ -411,6 +434,7 @@ const Profile = () => {
   const logOutClick = async () => {
     const res = await axios.delete("/users/logout");
     if (res.data.isSuccess) {
+      queryClient.removeQueries({ queryKey: ["profile"] });
       alert("로그아웃 되었습니다.");
       const updateAuth = { isAuthenticated: false };
       setAuth(updateAuth);
@@ -533,6 +557,9 @@ const Profile = () => {
             <HitoryTitle>
               <span>최근 주문 내역</span>
             </HitoryTitle>
+            <Guide>
+              * 아래 행들을 클릭하시면 상세 정보, 다운로드 링크가 보입니다.
+            </Guide>
             <HistoryTable>
               <HistoryTableHeader>
                 <tr>
@@ -542,7 +569,7 @@ const Profile = () => {
                   <HistoryTableHeaderCell>주문 상태</HistoryTableHeaderCell>
                 </tr>
               </HistoryTableHeader>
-              <tbody style={{ cursor: "pointer" }}>
+              <tbody>
                 {purchasedData!.result.length > 0 ? (
                   purchasedData!.result.map((item) => (
                     <>
@@ -558,62 +585,51 @@ const Profile = () => {
                           {formatPrice(item.totalPrice)}원
                         </HistoryTableCell>
                         <HistoryTableCell>
-                          {statusMapper[item.status] === "PAY_DONE" ? (
-                            <ul>
-                              {item.downloadUrl.map((e) => (
-                                <li>{e}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            statusMapper[item.status] || "서버 에러"
-                          )}
+                          {statusMapper[item.status] || "서버 에러"}
                         </HistoryTableCell>
                       </HistoryTableRow>
 
-                      {expandedRow === item.orderId && ( // ✅ 토글된 행일 때만 표시
-                        <tr style={{ cursor: "pointer" }}>
+                      {expandedRow === item.orderId && (
+                        <tr>
                           <td colSpan={4}>
                             <div
                               style={{
-                                padding: "20px",
-                                background: "#f9f9f9",
-                                borderRadius: "8px",
-                                border: "1px solid #e0e0e0",
-                                margin: "10px 0",
+                                padding: "24px",
+                                background: "#f5f5f5",
+                                borderRadius: "12px",
+                                border: "1px solid #ddd",
+                                margin: "12px 0",
+                                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
                               }}
                             >
                               <p
                                 style={{
-                                  fontSize: "16px",
-                                  fontWeight: "600",
-                                  marginBottom: "16px",
-                                  padding: "5px",
-                                  borderBottom: "1px solid black",
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
+                                  marginBottom: "18px",
+                                  paddingBottom: "6px",
+                                  borderBottom: "2px solid #333",
                                 }}
                               >
-                                <strong>결제요청 정보</strong>
+                                결제 요청 정보
                               </p>
                               {paymentsData!.result.find(
                                 (payment) => payment.id === item.orderId
                               ) ? (
                                 <div
                                   style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(2, 1fr)",
-                                    gap: "12px",
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    justifyContent: "space-between",
+                                    gap: "16px",
                                   }}
                                 >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <span
+                                  <div style={{ flex: "1", minWidth: "200px" }}>
+                                    <p
                                       style={{
-                                        fontSize: "14px",
-                                        color: "#555",
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
                                       }}
                                     >
                                       <strong>은행:</strong>{" "}
@@ -623,11 +639,12 @@ const Profile = () => {
                                             payment.id === item.orderId
                                         )?.bankName
                                       }
-                                    </span>
-                                    <span
+                                    </p>
+                                    <p
                                       style={{
-                                        fontSize: "14px",
-                                        color: "#555",
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
                                       }}
                                     >
                                       <strong>계좌주명:</strong>{" "}
@@ -637,19 +654,14 @@ const Profile = () => {
                                             payment.id === item.orderId
                                         )?.accountName
                                       }
-                                    </span>
+                                    </p>
                                   </div>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <span
+                                  <div style={{ flex: "1", minWidth: "200px" }}>
+                                    <p
                                       style={{
-                                        fontSize: "14px",
-                                        color: "#555",
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
                                       }}
                                     >
                                       <strong>계좌번호:</strong>{" "}
@@ -659,16 +671,17 @@ const Profile = () => {
                                             payment.id === item.orderId
                                         )?.accountNumber
                                       }
-                                    </span>
-                                    <span
+                                    </p>
+                                    <p
                                       style={{
-                                        fontSize: "14px",
-                                        color: "#555",
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
                                       }}
                                     >
                                       <strong>총 결제 금액:</strong>{" "}
                                       {formatPrice(item.totalPrice)}원
-                                    </span>
+                                    </p>
                                   </div>
                                 </div>
                               ) : (
@@ -677,10 +690,52 @@ const Profile = () => {
                                     fontSize: "14px",
                                     color: "#777",
                                     textAlign: "center",
+                                    padding: "10px",
+                                    background: "#fff",
+                                    borderRadius: "8px",
                                   }}
                                 >
                                   결제 정보가 없습니다.
                                 </p>
+                              )}
+
+                              {/* 다운로드 URL 표시 */}
+                              {item.status === "PAY_DONE" && (
+                                <ul
+                                  style={{
+                                    marginTop: "16px",
+                                    padding: "12px",
+                                    background: "#ffffff",
+                                    borderRadius: "8px",
+                                    border: "1px solid #ddd",
+                                    listStyle: "none",
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.05)",
+                                  }}
+                                >
+                                  <span>다운로드 링크</span>
+                                  {item.downloadUrl.map((url, index) => (
+                                    <li
+                                      key={index}
+                                      style={{
+                                        fontSize: "14px",
+                                        color: "#007bff",
+                                        padding: "6px 0",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "10px",
+                                      }}
+                                    >
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {url}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
                               )}
                             </div>
                           </td>

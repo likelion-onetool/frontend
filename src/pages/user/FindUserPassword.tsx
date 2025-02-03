@@ -103,16 +103,20 @@ const FindUserPassword = () => {
   const onValid = async ({ email }: IForm) => {
     setIsLoading(true);
     try {
-      const res = await axios.post(`/users/password`, {
+      const res = await axios.post(`/users/email/find-password`, {
         email,
       });
-      if (res) {
+      if (res.data.isSuccess) {
         setIsLoading(false);
         setIsSuccess(true); // 성공 시에만 true로 설정
+      } else {
+        setIsLoading(false);
+        alert("해당 이메일을 사용하는 유저를 찾을 수 없습니다.");
       }
     } catch (error) {
       console.log(error);
       setIsLoading(false); // 실패 시 로딩을 멈추도록 설정
+      alert("요청에 실패하였습니다.");
     }
   };
 
