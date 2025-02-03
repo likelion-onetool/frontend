@@ -4,11 +4,18 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
-import { getOrder, getUserInfo, getUserQna } from "../../utils/api";
+import {
+  getOrder,
+  getPayments,
+  getUserInfo,
+  getUserQna,
+} from "../../utils/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRecoilState } from "recoil";
 import { authState } from "../../atoms/authAtom";
 import { formatPrice } from "../../utils/formatPrice";
+import { statusMapper } from "../../utils/statusMapper";
+import { useState } from "react";
 
 const Container = styled.div`
   display: flex;
@@ -201,7 +208,6 @@ const ProfilePic = styled.div`
 const HitoryTitle = styled.div`
   text-align: center;
   padding: 24px 0;
-  border-bottom: 1px solid #cdcdcd;
   font-size: 18px;
   font-weight: 600;
 `;
@@ -221,6 +227,7 @@ const HistoryTableHeader = styled.thead`
 
 const HistoryTableRow = styled.tr`
   border-bottom: 1px solid #eaeaea;
+  cursor: pointer;
 `;
 
 const HistoryTableCell = styled.td`
@@ -243,6 +250,13 @@ const ErrorMessage = styled.p`
 const ItemName = styled.span`
   font-size: 14px;
   font-weight: bold;
+`;
+
+const Guide = styled.span`
+  font-size: 12px;
+  color: red;
+  display: block;
+  text-align: right;
 `;
 
 interface ProfileResultProps {
@@ -276,7 +290,8 @@ interface PurchasedItemResultProps {
   orderName: string;
   orderId: number;
   totalPrice: number;
-  status: boolean;
+  status: string;
+  downloadUrl: string[];
 }
 
 interface PurchasedItemProps {
@@ -301,6 +316,21 @@ interface QnaProps {
   result: QnaItemProps[];
 }
 
+interface PaymentsResultProps {
+  id: number;
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  totalPrice: number;
+}
+
+interface PaymentsProps {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: PaymentsResultProps[];
+}
+
 const Profile = () => {
   const {
     data: profileData,
@@ -315,6 +345,15 @@ const Profile = () => {
   } = useQuery<PurchasedItemProps>({
     queryKey: ["profile", "userPurchased"],
     queryFn: getOrder,
+  });
+
+  const {
+    data: paymentsData,
+    isLoading: paymentsIsLoading,
+    error: paymentsError,
+  } = useQuery<PaymentsProps>({
+    queryKey: ["profile", "userPayments"],
+    queryFn: getPayments,
   });
 
   const {
@@ -336,6 +375,11 @@ const Profile = () => {
 
   const navigate = useNavigate();
   const [auth, setAuth] = useRecoilState(authState);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  const toggleRow = (orderId: number) => {
+    setExpandedRow((prev) => (prev === orderId ? null : orderId)); // 클릭 시 토글
+  };
 
   const allChangeClick = async ({
     name,
@@ -400,11 +444,16 @@ const Profile = () => {
     }
   };
 
-  if (profileIsLoading || purchasedIsLoading || userQnaIsLoading) {
+  if (
+    profileIsLoading ||
+    purchasedIsLoading ||
+    userQnaIsLoading ||
+    paymentsIsLoading
+  ) {
     return <div>Loading...</div>;
   }
 
-  if (profileError || purchasedError || userQnaError) {
+  if (profileError || purchasedError || userQnaError || paymentsError) {
     return <div>오류가 발생했습니다. 다시 시도해 주세요.</div>;
   }
 
@@ -508,6 +557,9 @@ const Profile = () => {
             <HitoryTitle>
               <span>최근 주문 내역</span>
             </HitoryTitle>
+            <Guide>
+              * 아래 행들을 클릭하시면 상세 정보, 다운로드 링크가 보입니다.
+            </Guide>
             <HistoryTable>
               <HistoryTableHeader>
                 <tr>
@@ -519,19 +571,177 @@ const Profile = () => {
               </HistoryTableHeader>
               <tbody>
                 {purchasedData!.result.length > 0 ? (
-                  purchasedData!.result.map((item, index) => (
-                    <HistoryTableRow key={index}>
-                      <HistoryTableCell>
-                        <ItemName>{item.orderName}</ItemName>
-                      </HistoryTableCell>
-                      <HistoryTableCell>{item.orderId}</HistoryTableCell>
-                      <HistoryTableCell>
-                        {formatPrice(item.totalPrice)}원
-                      </HistoryTableCell>
-                      <HistoryTableCell>
-                        {item.status ? "완료" : "처리 중"}
-                      </HistoryTableCell>
-                    </HistoryTableRow>
+                  purchasedData!.result.map((item) => (
+                    <>
+                      <HistoryTableRow
+                        key={item.orderId}
+                        onClick={() => toggleRow(item.orderId)}
+                      >
+                        <HistoryTableCell>
+                          <ItemName>{item.orderName}</ItemName>
+                        </HistoryTableCell>
+                        <HistoryTableCell>{item.orderId}</HistoryTableCell>
+                        <HistoryTableCell>
+                          {formatPrice(item.totalPrice)}원
+                        </HistoryTableCell>
+                        <HistoryTableCell>
+                          {statusMapper[item.status] || "서버 에러"}
+                        </HistoryTableCell>
+                      </HistoryTableRow>
+
+                      {expandedRow === item.orderId && (
+                        <tr>
+                          <td colSpan={4}>
+                            <div
+                              style={{
+                                padding: "24px",
+                                background: "#f5f5f5",
+                                borderRadius: "12px",
+                                border: "1px solid #ddd",
+                                margin: "12px 0",
+                                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                              }}
+                            >
+                              <p
+                                style={{
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
+                                  marginBottom: "18px",
+                                  paddingBottom: "6px",
+                                  borderBottom: "2px solid #333",
+                                }}
+                              >
+                                결제 요청 정보
+                              </p>
+                              {paymentsData!.result.find(
+                                (payment) => payment.id === item.orderId
+                              ) ? (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    justifyContent: "space-between",
+                                    gap: "16px",
+                                  }}
+                                >
+                                  <div style={{ flex: "1", minWidth: "200px" }}>
+                                    <p
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
+                                      }}
+                                    >
+                                      <strong>은행:</strong>{" "}
+                                      {
+                                        paymentsData!.result.find(
+                                          (payment) =>
+                                            payment.id === item.orderId
+                                        )?.bankName
+                                      }
+                                    </p>
+                                    <p
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
+                                      }}
+                                    >
+                                      <strong>계좌주명:</strong>{" "}
+                                      {
+                                        paymentsData!.result.find(
+                                          (payment) =>
+                                            payment.id === item.orderId
+                                        )?.accountName
+                                      }
+                                    </p>
+                                  </div>
+                                  <div style={{ flex: "1", minWidth: "200px" }}>
+                                    <p
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
+                                      }}
+                                    >
+                                      <strong>계좌번호:</strong>{" "}
+                                      {
+                                        paymentsData!.result.find(
+                                          (payment) =>
+                                            payment.id === item.orderId
+                                        )?.accountNumber
+                                      }
+                                    </p>
+                                    <p
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "#444",
+                                        marginBottom: "8px",
+                                      }}
+                                    >
+                                      <strong>총 결제 금액:</strong>{" "}
+                                      {formatPrice(item.totalPrice)}원
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p
+                                  style={{
+                                    fontSize: "14px",
+                                    color: "#777",
+                                    textAlign: "center",
+                                    padding: "10px",
+                                    background: "#fff",
+                                    borderRadius: "8px",
+                                  }}
+                                >
+                                  결제 정보가 없습니다.
+                                </p>
+                              )}
+
+                              {/* 다운로드 URL 표시 */}
+                              {item.status === "PAY_DONE" && (
+                                <ul
+                                  style={{
+                                    marginTop: "16px",
+                                    padding: "12px",
+                                    background: "#ffffff",
+                                    borderRadius: "8px",
+                                    border: "1px solid #ddd",
+                                    listStyle: "none",
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.05)",
+                                  }}
+                                >
+                                  <span>다운로드 링크</span>
+                                  {item.downloadUrl.map((url, index) => (
+                                    <li
+                                      key={index}
+                                      style={{
+                                        fontSize: "14px",
+                                        color: "#007bff",
+                                        padding: "6px 0",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "10px",
+                                      }}
+                                    >
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {url}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))
                 ) : (
                   <HistoryTableRow>
