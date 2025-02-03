@@ -257,3 +257,12 @@ export async function postPayments(paymentsDetail: PaymentsDetailProps) {
     console.log(error);
   }
 }
+
+export async function getPayments() {
+  try {
+    const res = await axios.get(`/payments/deposit`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}

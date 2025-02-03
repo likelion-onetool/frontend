@@ -4,11 +4,18 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
-import { getOrder, getUserInfo, getUserQna } from "../../utils/api";
+import {
+  getOrder,
+  getPayments,
+  getUserInfo,
+  getUserQna,
+} from "../../utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useRecoilState } from "recoil";
 import { authState } from "../../atoms/authAtom";
 import { formatPrice } from "../../utils/formatPrice";
+import { statusMapper } from "../../utils/statusMapper";
+import { useState } from "react";
 
 const Container = styled.div`
   display: flex;
@@ -276,7 +283,8 @@ interface PurchasedItemResultProps {
   orderName: string;
   orderId: number;
   totalPrice: number;
-  status: boolean;
+  status: string;
+  downloadUrl: string[];
 }
 
 interface PurchasedItemProps {
@@ -301,6 +309,21 @@ interface QnaProps {
   result: QnaItemProps[];
 }
 
+interface PaymentsResultProps {
+  id: number;
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  totalPrice: number;
+}
+
+interface PaymentsProps {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: PaymentsResultProps[];
+}
+
 const Profile = () => {
   const {
     data: profileData,
@@ -315,6 +338,15 @@ const Profile = () => {
   } = useQuery<PurchasedItemProps>({
     queryKey: ["userPurchased"],
     queryFn: getOrder,
+  });
+
+  const {
+    data: paymentsData,
+    isLoading: paymentsIsLoading,
+    error: paymentsError,
+  } = useQuery<PaymentsProps>({
+    queryKey: ["profile", "userPayments"],
+    queryFn: getPayments,
   });
 
   const {
@@ -334,6 +366,11 @@ const Profile = () => {
 
   const navigate = useNavigate();
   const [auth, setAuth] = useRecoilState(authState);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  const toggleRow = (orderId: number) => {
+    setExpandedRow((prev) => (prev === orderId ? null : orderId)); // 클릭 시 토글
+  };
 
   const allChangeClick = async ({
     name,
@@ -383,11 +420,16 @@ const Profile = () => {
     }
   };
 
-  if (profileIsLoading || purchasedIsLoading || userQnaIsLoading) {
+  if (
+    profileIsLoading ||
+    purchasedIsLoading ||
+    userQnaIsLoading ||
+    paymentsIsLoading
+  ) {
     return <div>Loading...</div>;
   }
 
-  if (profileError || purchasedError || userQnaError) {
+  if (profileError || purchasedError || userQnaError || paymentsError) {
     return <div>오류가 발생했습니다. 다시 시도해 주세요.</div>;
   }
 
@@ -500,21 +542,151 @@ const Profile = () => {
                   <HistoryTableHeaderCell>주문 상태</HistoryTableHeaderCell>
                 </tr>
               </HistoryTableHeader>
-              <tbody>
+              <tbody style={{ cursor: "pointer" }}>
                 {purchasedData!.result.length > 0 ? (
-                  purchasedData!.result.map((item, index) => (
-                    <HistoryTableRow key={index}>
-                      <HistoryTableCell>
-                        <ItemName>{item.orderName}</ItemName>
-                      </HistoryTableCell>
-                      <HistoryTableCell>{item.orderId}</HistoryTableCell>
-                      <HistoryTableCell>
-                        {formatPrice(item.totalPrice)}원
-                      </HistoryTableCell>
-                      <HistoryTableCell>
-                        {item.status ? "완료" : "처리 중"}
-                      </HistoryTableCell>
-                    </HistoryTableRow>
+                  purchasedData!.result.map((item) => (
+                    <>
+                      <HistoryTableRow
+                        key={item.orderId}
+                        onClick={() => toggleRow(item.orderId)}
+                      >
+                        <HistoryTableCell>
+                          <ItemName>{item.orderName}</ItemName>
+                        </HistoryTableCell>
+                        <HistoryTableCell>{item.orderId}</HistoryTableCell>
+                        <HistoryTableCell>
+                          {formatPrice(item.totalPrice)}원
+                        </HistoryTableCell>
+                        <HistoryTableCell>
+                          {statusMapper[item.status] === "PAY_DONE" ? (
+                            <ul>
+                              {item.downloadUrl.map((e) => (
+                                <li>{e}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            statusMapper[item.status] || "서버 에러"
+                          )}
+                        </HistoryTableCell>
+                      </HistoryTableRow>
+
+                      {expandedRow === item.orderId && ( // ✅ 토글된 행일 때만 표시
+                        <tr style={{ cursor: "pointer" }}>
+                          <td colSpan={4}>
+                            <div
+                              style={{
+                                padding: "20px",
+                                background: "#f9f9f9",
+                                borderRadius: "8px",
+                                border: "1px solid #e0e0e0",
+                                margin: "10px 0",
+                              }}
+                            >
+                              <p
+                                style={{
+                                  fontSize: "16px",
+                                  fontWeight: "600",
+                                  marginBottom: "16px",
+                                  padding: "5px",
+                                  borderBottom: "1px solid black",
+                                }}
+                              >
+                                <strong>결제요청 정보</strong>
+                              </p>
+                              {paymentsData!.result.find(
+                                (payment) => payment.id === item.orderId
+                              ) ? (
+                                <div
+                                  style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(2, 1fr)",
+                                    gap: "12px",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: "14px",
+                                        color: "#555",
+                                      }}
+                                    >
+                                      <strong>은행:</strong>{" "}
+                                      {
+                                        paymentsData!.result.find(
+                                          (payment) =>
+                                            payment.id === item.orderId
+                                        )?.bankName
+                                      }
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: "14px",
+                                        color: "#555",
+                                      }}
+                                    >
+                                      <strong>계좌주명:</strong>{" "}
+                                      {
+                                        paymentsData!.result.find(
+                                          (payment) =>
+                                            payment.id === item.orderId
+                                        )?.accountName
+                                      }
+                                    </span>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: "14px",
+                                        color: "#555",
+                                      }}
+                                    >
+                                      <strong>계좌번호:</strong>{" "}
+                                      {
+                                        paymentsData!.result.find(
+                                          (payment) =>
+                                            payment.id === item.orderId
+                                        )?.accountNumber
+                                      }
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: "14px",
+                                        color: "#555",
+                                      }}
+                                    >
+                                      <strong>총 결제 금액:</strong>{" "}
+                                      {formatPrice(item.totalPrice)}원
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p
+                                  style={{
+                                    fontSize: "14px",
+                                    color: "#777",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  결제 정보가 없습니다.
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))
                 ) : (
                   <HistoryTableRow>
