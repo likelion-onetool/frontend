@@ -78,20 +78,20 @@ const FindUserId = () => {
 
   const onValid = async ({ name, phoneNum }: IForm) => {
     try {
-      const res = await axios.post(`/users/email`, {
+      const res = await axios.post(`/users/email/find-email`, {
         name,
         phoneNum,
       });
-      if (res.data) {
+      if (res.data.isSuccess) {
         setFindId(res.data.result);
         setFindName(name);
+      } else {
+        alert("에러가 발생했습니다.");
       }
     } catch (error) {
       console.log(error);
     }
   };
-
-  // test목적으로 사용됨.
 
   return (
     <Container>
@@ -121,7 +121,11 @@ const FindUserId = () => {
           </UserFormGroup>
           <UserFormGroup>
             <UserLabel>전화번호</UserLabel>
-            <Input type="text" {...register("phoneNum", { required: true })} />
+            <Input
+              type="text"
+              placeholder="01012345678"
+              {...register("phoneNum", { required: true })}
+            />
           </UserFormGroup>
           <FindIdButton>아이디 찾기</FindIdButton>
         </Form>

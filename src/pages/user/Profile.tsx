@@ -353,7 +353,16 @@ const Profile = () => {
         name,
         phone_num: phoneNum,
       });
-      alert("정보가 성공적으로 수정되었습니다.");
+      const outRes = await axios.delete("/users/logout");
+      if (outRes.data.isSuccess) {
+        queryClient.removeQueries({ queryKey: ["profile"] });
+        const updateAuth = { isAuthenticated: false };
+        setAuth(updateAuth);
+        alert(
+          "정보가 성공적으로 수정되었습니다. 보안을 위해 재로그인을 해주세요!"
+        );
+        navigate("/");
+      }
     } catch (error) {
       console.error(error);
       alert("정보 수정에 실패했습니다.");
@@ -365,8 +374,13 @@ const Profile = () => {
       const res = await axios.delete("/users");
       if (res.status === 200) {
         alert("탈퇴가 완료되었습니다.");
-        // 탈퇴시에도 로그아웃처럼 토큰 만료처리
-        navigate("/");
+        const outRes = await axios.delete("/users/logout");
+        if (outRes.data.isSuccess) {
+          queryClient.removeQueries({ queryKey: ["profile"] });
+          const updateAuth = { isAuthenticated: false };
+          setAuth(updateAuth);
+          navigate("/");
+        }
       }
     } catch (error) {
       console.log(error);
