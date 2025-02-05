@@ -80,7 +80,7 @@ const FindUserId = () => {
     try {
       const res = await axios.post(`/users/email/find-email`, {
         name,
-        phoneNum,
+        phone_num: phoneNum,
       });
       if (res.data.isSuccess) {
         setFindId(res.data.result);
