@@ -92,7 +92,10 @@ const MainBanner = () => {
     }
   }, [index, isHovered, images.length]);
 
-  const handleNext = () => {
+  const handleNext = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+
     if (isLeaving) {
       return;
     }
@@ -100,7 +103,10 @@ const MainBanner = () => {
     setIndex((prevIndex) => (prevIndex + 1) % images.length);
   };
 
-  const handlePrev = () => {
+  const handlePrev = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+
     if (isLeaving) {
       return;
     }
@@ -112,39 +118,40 @@ const MainBanner = () => {
 
   return (
     <BannerWrapper>
-      <AnimatePresence
-        initial={false}
-        custom={index}
-        onExitComplete={() => setIsLeaving(false)}
-      >
-        <TestBanner
-          key={index}
+      <Link to={"/items/11"}>
+        <AnimatePresence
+          initial={false}
           custom={index}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ duration: 0.7 }}
-          bgImage={images[index]} // Use bgImage instead of bgColor
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onExitComplete={() => setIsLeaving(false)}
         >
-          <Link to={"/items/4"}>
+          <TestBanner
+            key={index}
+            custom={index}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.7 }}
+            bgImage={images[index]} // Use bgImage instead of bgColor
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
             <p>무료 CAD 소스가 이렇게 좋다고?</p>
             <p>킨텍스 도면 보러가기</p>
-          </Link>
-          <NextBtn>
-            <button onClick={handleNext}>
-              <IoIosArrowDown />
-            </button>
-          </NextBtn>
-          <PrevBtn>
-            <button onClick={handlePrev}>
-              <IoIosArrowUp />
-            </button>
-          </PrevBtn>
-        </TestBanner>
-      </AnimatePresence>
+
+            <NextBtn>
+              <button onClick={handleNext}>
+                <IoIosArrowDown />
+              </button>
+            </NextBtn>
+            <PrevBtn>
+              <button onClick={handlePrev}>
+                <IoIosArrowUp />
+              </button>
+            </PrevBtn>
+          </TestBanner>
+        </AnimatePresence>
+      </Link>
     </BannerWrapper>
   );
 };

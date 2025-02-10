@@ -83,9 +83,9 @@ const LeftSidebar = () => {
       <HorizontalBorder>
         <CategoryHeader>
           <span>카테고리</span>
-          <button onClick={() => setCategoryToggle((prev) => !prev)}>
+          {/* <button onClick={() => setCategoryToggle((prev) => !prev)}>
             {categoryToggle ? <IoIosArrowUp /> : <IoIosArrowDown />}
-          </button>
+          </button> */}
         </CategoryHeader>
         <CategoryContainer>
           <MainCategoryContainer>

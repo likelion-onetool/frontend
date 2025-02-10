@@ -93,7 +93,7 @@ const PaginationButton = styled.button<{ disabled?: boolean }>`
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 
   &:hover {
-    background-color: ${(props) => (props.disabled ? "#f0f0f0" : "#00AC17")};
+    background-color: ${(props) => (props.disabled ? "#f0f0f0" : "#2645ac")};
     color: ${(props) => (props.disabled ? "#333" : "#fff")};
   }
 `;
@@ -148,10 +148,10 @@ const AllItemsPage = () => {
               <LeftSidebar />
               <RightContainer>
                 <TextContainer>{pageTitle}</TextContainer>
-                <FilterContainer>
+                {/* <FilterContainer>
                   <FilterButton>가격순 ▾</FilterButton>
                   <FilterButton>판매순 ▾</FilterButton>
-                </FilterContainer>
+                </FilterContainer> */}
                 <ItemsGrid>
                   {data.result.content.map((item) => (
                     <ItemCard key={item.id} blueprint={item} />
