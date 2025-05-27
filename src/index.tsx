@@ -87,7 +87,7 @@ input{
 }
 `;
 
-axios.defaults.baseURL = "https://api.onetool.co.kr";
+axios.defaults.baseURL = "http://34.64.193.241:8080";
 axios.defaults.withCredentials = true;
 
 const queryClient = new QueryClient({
